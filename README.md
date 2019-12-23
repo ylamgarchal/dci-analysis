@@ -58,3 +58,33 @@ This will create several results in csv format:
 [yassine@Bouceka dci-analysis]$ dci-analyze sync MyTeam RHEL-8.1 Performance
 [yassine@Bouceka dci-analysis]$ dci-analyze analyze RHEL-8.0 RHEL-8.1
 ```
+
+## Reading results with Jupyter
+
+### Install and run Jupyter
+
+```console
+[yassine@Bouceka dci-analysis]$ pip install jupyter
+[yassine@Bouceka dci-analysis]$ jupyter notebook
+```
+
+After this command your browser should be open with the Jupyter page. Click on
+"new" and select your python interpeter to create a new notebook.
+
+### Read the results
+
+```python
+import pandas
+
+rhel_80_deviation = pandas.read_csv('RHEL-8.0_standard_deviation.csv', delimiter='!', engine='python')
+```
+
+This will read the csv file, press shift + enter to validate the statement code.
+
+### Show the results
+
+```python
+rhel_80_deviation
+```
+
+Simply read the variable and press shift + enter to show the results.
