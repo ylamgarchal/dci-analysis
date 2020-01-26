@@ -75,6 +75,11 @@ def analyze():
     parser.add_argument('topic', type=str, help='The topic to compare to')
     args = parser.parse_args(sys.argv[2:])
 
+    for path in ('csv', 'html'):
+        if not os.path.exists(path):
+            LOG.info('create %s/ directory' % path)
+            os.mkdir(path)
+
     try:
         analyzer.analyze(args.baseline, args.topic)
         LOG.info('done')

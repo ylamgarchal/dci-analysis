@@ -55,14 +55,18 @@ def write_series_csv(file_path, series, header):
 
 def analyze(topic_name_1, topic_name_2):
     # compute standard deviation
-    LOG.info('compute standard deviation')
     for topic_name in (topic_name_1, topic_name_2):
+        LOG.info('compute standard deviation of %s' % topic_name)
         jobs_dataset = get_jobs_dataset(topic_name)
         jobs_std = jobs_dataset.apply(numpy.std, axis=1)
         jobs_std.sort_values(ascending=False, inplace=True)
-        file_path = '%s_standard_deviation.csv' % topic_name
-        LOG.info('write file to %s' % file_path)
-        write_series_csv(file_path, jobs_std, 'testname, time')
+        csv_file_path = 'csv/%s_standard_deviation.csv' % topic_name
+        LOG.info('write file to %s' % csv_file_path)
+        write_series_csv(csv_file_path, jobs_std, 'testname, time')
+        html_file_path = 'html/%s_standard_deviation.html' % topic_name
+        with open(html_file_path, 'w') as f:
+            LOG.info('write file to %s' % html_file_path)
+            jobs_std.to_frame().to_html(f, justify='left')
 
     # compare baseline mean with jobs
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
@@ -72,29 +76,38 @@ def analyze(topic_name_1, topic_name_2):
     jobs = get_jobs_dataset(topic_name_2)
 
     def delta_mean(lign):
-        if lign.name not in baseline_jobs.keys():
+        if lign.name not in baseline_jobs.index.values:
             return "N/A"
         diff = lign - baseline_jobs_mean[lign.name]
         return (diff * 100.0) / baseline_jobs_mean[lign.name]
 
     compared_jobs = jobs.apply(delta_mean, axis=1)
-    file_path = '%s_mean_vs_%s.csv' % (topic_name_1, topic_name_2)
-    LOG.info('write file to %s' % file_path)
-    compared_jobs.to_csv(file_path, sep=',')
+    csv_file_path = 'csv/%s_mean_vs_%s.csv' % (topic_name_1, topic_name_2)
+    LOG.info('write file to %s' % csv_file_path)
+    compared_jobs.to_csv(csv_file_path, sep=',')
+
+    html_file_path = 'html/%s_mean_vs_%s.html' % (topic_name_1, topic_name_2)
+    with open(html_file_path, 'w') as f:
+        LOG.info('write file to %s' % html_file_path)
+        compared_jobs.to_html(f, justify='left')
 
     # compare baseline median with jobs
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
     baseline_jobs_median = baseline_jobs.median(axis=1)
-
     jobs = get_jobs_dataset(topic_name_2)
 
     def delta_median(lign):
-        if lign.name not in baseline_jobs.keys():
+        if lign.name not in baseline_jobs.index.values:
             return "N/A"
         diff = lign - baseline_jobs_median[lign.name]
         return (diff * 100.0) / baseline_jobs_median[lign.name]
 
     compared_jobs = jobs.apply(delta_median, axis=1)
-    file_path = '%s_median_vs_%s.csv' % (topic_name_1, topic_name_2)
-    LOG.info('write file to %s' % file_path)
-    compared_jobs.to_csv(file_path, sep=',')
+    csv_file_path = 'csv/%s_median_vs_%s.csv' % (topic_name_1, topic_name_2)
+    LOG.info('write file to %s' % csv_file_path)
+    compared_jobs.to_csv(csv_file_path, sep=',')
+
+    html_file_path = 'html/%s_median_vs_%s.html' % (topic_name_1, topic_name_2)
+    with open(html_file_path, 'w') as f:
+        LOG.info('write file to %s' % html_file_path)
+        compared_jobs.to_html(f, justify='left')

@@ -62,34 +62,23 @@ This will create several results in csv format:
 [yassine@Bouceka dci-analysis]$ dci-analyze sync MyTeam RHEL-8.0 Performance
 [yassine@Bouceka dci-analysis]$ dci-analyze sync MyTeam RHEL-8.1 Performance
 [yassine@Bouceka dci-analysis]$ dci-analyze analyze RHEL-8.0 RHEL-8.1
+INFO - create csv/ directory
+INFO - create html/ directory
+INFO - compute standard deviation of RHEL-8.0
+INFO - write file to csv/RHEL-8.0_standard_deviation.csv
+INFO - write file to html/RHEL-8.0_standard_deviation.html
+INFO - compute standard deviation of RHEL-8.1
+INFO - write file to csv/RHEL-8.1_standard_deviation.csv
+INFO - write file to html/RHEL-8.1_standard_deviation.html
+INFO - compare the mean of topic RHEL-8.0 with jobs of topic RHEL-8.1...
+INFO - write file to csv/RHEL-8.0_mean_vs_RHEL-8.1.csv
+INFO - write file to html/RHEL-8.0_mean_vs_RHEL-8.1.html
+INFO - compare the median of topic RHEL-8.0 with jobs of topic RHEL-8.1...
+INFO - write file to csv/RHEL-8.0_median_vs_RHEL-8.1.csv
+INFO - write file to html/RHEL-8.0_median_vs_RHEL-8.1.html
+INFO - done
 ```
 
-## Reading results with Jupyter
+## Reading results
 
-### Install and run Jupyter
-
-```console
-[yassine@Bouceka dci-analysis]$ pip install jupyter
-[yassine@Bouceka dci-analysis]$ jupyter notebook
-```
-
-After this command your browser should be open with the Jupyter page. Click on
-"new" and select your python interpeter to create a new notebook.
-
-### Read the results
-
-```python
-import pandas
-
-rhel_80_deviation = pandas.read_csv('RHEL-8.0_standard_deviation.csv', delimiter='!', engine='python')
-```
-
-This will read the csv file, press shift + enter to validate the statement code.
-
-### Show the results
-
-```python
-rhel_80_deviation
-```
-
-Simply read the variable and press shift + enter to show the results.
+Results are available in csv/ and html/ directories.
