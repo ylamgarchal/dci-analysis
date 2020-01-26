@@ -15,8 +15,10 @@
 # under the License.
 
 from lxml import etree
+import json
 import logging
 import os
+import requests
 import sys
 
 
@@ -31,9 +33,22 @@ LOG.setLevel(logging.DEBUG)
 HTTP_TIMEOUT = 600
 
 
+def get_with_retry(dci_context, uri, timeout=5, nb_retry=5):
+    res = None
+    for i in range(nb_retry):
+        try:
+            res = dci_context.session.get(uri, timeout=5)
+            break
+        except requests.exceptions.Timeout:
+            LOG.info('timeout on %s, retrying...' % uri)
+        except requests.ConnectionError:
+            LOG.info('connection error on %s, retrying...' % uri)
+    return res
+
+
 def get_team_id(dci_context, team_name):
     uri = '%s/teams?where=name:%s' % (dci_context.dci_cs_api, team_name)
-    res = dci_context.session.get(uri, timeout=HTTP_TIMEOUT)
+    res = get_with_retry(dci_context, uri)
     if res.status_code != 200 or len(res.json()['teams']) == 0:
         LOG.error('team %s: status: %s, message: %s' % (team_name,
                                                         res.status_code,
@@ -45,7 +60,7 @@ def get_team_id(dci_context, team_name):
 
 def get_topic_id(dci_context, topic_name):
     uri = '%s/topics?where=name:%s' % (dci_context.dci_cs_api, topic_name)
-    res = dci_context.session.get(uri, timeout=HTTP_TIMEOUT)
+    res = get_with_retry(dci_context, uri)
     if res.status_code != 200:
         LOG.error('topic %s: status: %s, message: %s' % (topic_name,
                                                          res.status_code,
@@ -56,12 +71,22 @@ def get_topic_id(dci_context, topic_name):
 
 
 def get_jobs(dci_context, team_id, topic_id):
-    uri = '%s/jobs?where=team_id:%s,topic_id:%s&embed=files' % \
+    uri = '%s/jobs?where=team_id:%s,topic_id:%s' % \
              (dci_context.dci_cs_api, team_id, topic_id)
-    res = dci_context.session.get(uri, timeout=HTTP_TIMEOUT)
-    if res.status_code != 200:
+    res = get_with_retry(dci_context, uri)
+
+    if res is not None and res.status_code != 200:
         LOG.error('status: %s, message: %s' % (res.status_code, res.text))
     return res.json()['jobs']
+
+
+def get_files_of_job(dci_context, job_id):
+    uri = '%s/jobs/%s/files' % (dci_context.dci_cs_api, job_id)
+    res = get_with_retry(dci_context, uri)
+
+    if res is not None and res.status_code != 200:
+        LOG.error('status: %s, message: %s' % (res.status_code, res.text))
+    return res.json()['files']
 
 
 def junit_to_dict(junit):
@@ -72,8 +97,9 @@ def junit_to_dict(junit):
             for tc in testsuite:
                 key = "%s/%s" % (tc.get('classname'), tc.get('name'))
                 key = key.strip()
-                if tc.get('time') is None or float(tc.get('time')) == 0.0:
-                    res[key] = ""
+                key = key.replace(',', '_')
+                if tc.get('time') is None:
+                    res[key] = "N/A"
                 else:
                     res[key] = float(tc.get('time'))
     except etree.XMLSyntaxError as e:
@@ -89,15 +115,20 @@ def get_test_path(topic_name, job_id, test_name):
 
 def write_test_csv(job_id, test_path, test_dict):
     with open(test_path, 'w') as f:
-        f.write('testname!%s\n' % job_id)
+        f.write('testname,%s\n' % job_id)
         for tc in test_dict:
-            f.write('%s!%s\n' % (tc, test_dict[tc]))
+            f.write('%s,%s\n' % (tc, test_dict[tc]))
+
+
+def write_test_json(job_id, test_path, test_json):
+    with open(test_path, 'w') as f:
+        f.write(json.dumps(test_json, indent=4))
 
 
 def get_junit_of_file(dci_context, file_id):
     uri = '%s/files/%s/content' % (dci_context.dci_cs_api, file_id)
-    res = dci_context.session.get(uri, timeout=HTTP_TIMEOUT)
-    if res.status_code != 200:
+    res = get_with_retry(dci_context, uri)
+    if res is not None and res.status_code != 200:
         LOG.error('file not found: %s' % file_id)
     return res.text
 
@@ -113,13 +144,15 @@ def sync(dci_context, team_name, topic_name, test_name):
 
     LOG.info('convert jobs %s tests to csv files...' % test_name)
     for job in jobs:
-        for file in job['files']:
+        test_path = get_test_path(topic_name, job['id'], test_name)  # noqa
+        if os.path.exists(test_path):
+            LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
+            continue
+        files = get_files_of_job(dci_context, job['id'])
+        for file in files:
             if file['name'] == test_name:
-                test_path = get_test_path(topic_name, job['id'], test_name)  # noqa
-                if os.path.exists(test_path):
-                    LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
-                    continue
-                LOG.info('convert junit job %s to csv' % job['id'])
+                LOG.info('download file %s of job %s' % (file['id'], job['id']))  # noqa
                 junit = get_junit_of_file(dci_context, file['id'])
+                LOG.info('convert junit job %s to csv' % job['id'])
                 test_dict = junit_to_dict(junit)
                 write_test_csv(job['id'], test_path, test_dict)

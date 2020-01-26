@@ -36,7 +36,8 @@ Synchronize all the jobs from the server to your local storage.
 [yassine@Bouceka dci-analysis]$ dci-analyze sync TEAM TOPIC Testname
 ```
 
-This command will create a TOPIC/ directory with all the jobs tests in csv format.
+This command will create a TOPIC/ directory with all the Testname tests from the jobs
+that belongs to the team TEAM, in csv format.
 
 Finally, run the analyzer.
 
@@ -46,9 +47,13 @@ Finally, run the analyzer.
 This will create several results in csv format:
 
     - RHEL-8.0_mean_vs_RHEL-8.1.csv
+      * compute the mean of the baseline topic and print the delta with the latter topic.
     - RHEL-8.0_median_vs_RHEL-8.1.csv
+      * compute the median of the baseline topic and print the delta with the latter topic.
     - RHEL-8.0_standard_deviation.csv
+      * compute the standard deviation of every tests cases of the topic
     - RHEL-8.1_standard_deviation.csv
+      * compute the standard deviation of every tests cases of the topic
 
 ## Example
 
