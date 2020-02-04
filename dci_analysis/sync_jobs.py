@@ -107,8 +107,8 @@ def junit_to_dict(junit):
     return res
 
 
-def get_test_path(topic_name, job_id, test_name):
-    test_csv_name = '%s_%s.csv' % (job_id, test_name)
+def get_test_path(topic_name, job, test_name):
+    test_csv_name = '%s_%s_%s.csv' % (job['created_at'], job['id'], test_name)
     path = '%s/%s' % (topic_name, test_csv_name)
     return os.path.abspath(path)
 
@@ -144,7 +144,7 @@ def sync(dci_context, team_name, topic_name, test_name):
 
     LOG.info('convert jobs %s tests to csv files...' % test_name)
     for job in jobs:
-        test_path = get_test_path(topic_name, job['id'], test_name)  # noqa
+        test_path = get_test_path(topic_name, job, test_name)  # noqa
         if os.path.exists(test_path):
             LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
             continue

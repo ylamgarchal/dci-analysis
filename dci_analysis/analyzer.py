@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime as dt
 import glob
 import logging
 import os
@@ -32,9 +33,20 @@ LOG.addHandler(streamhandler)
 LOG.setLevel(logging.DEBUG)
 
 
+def get_sorted_csv_files(csv_files, topic_name):
+    sorted_csv_files = []
+    for cf in csv_files:
+        cf = cf.split('/', 1)[1]
+        date, file_name = cf.split('_', 1)
+        sorted_csv_files.append({'date': date, 'file_name': file_name})
+    sorted_csv_files.sort(key=lambda a: dt.datetime.strptime(a['date'], '%Y-%m-%dT%H:%M:%S.%f'))  # noqa
+    return ['%s/%s_%s' % (topic_name, scf['date'], scf['file_name']) for scf in sorted_csv_files]  # noqa
+
+
 def get_jobs_dataset(topic_name):
     csv_files = glob.glob('%s/*' % topic_name)
-    first_csf_file, csv_files = csv_files[0], csv_files[1:]
+    sorted_csv_files = get_sorted_csv_files(csv_files, topic_name)
+    first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:]
     abs_path_cf = os.path.abspath(first_csf_file)
     jobs_dataset = pd.read_csv(abs_path_cf, delimiter=',', engine='python', index_col='testname')  # noqa
 
@@ -56,8 +68,17 @@ def write_series_csv(file_path, series, header):
 def analyze(topic_name_1, topic_name_2):
     # compute standard deviation
     for topic_name in (topic_name_1, topic_name_2):
-        LOG.info('compute standard deviation of %s' % topic_name)
         jobs_dataset = get_jobs_dataset(topic_name)
+        # write the evolution
+        csv_file_path = 'csv/%s_evolution.csv' % topic_name
+        LOG.info('write file to %s' % csv_file_path)
+        jobs_dataset.to_csv(csv_file_path, sep=',')
+        html_file_path = 'html/%s_evolution.html' % topic_name
+        with open(html_file_path, 'w') as f:
+            LOG.info('write file to %s' % html_file_path)
+            jobs_dataset.to_html(f, justify='left')
+        # write the standart deviation
+        LOG.info('compute standard deviation of %s' % topic_name)
         jobs_std = jobs_dataset.apply(numpy.std, axis=1)
         jobs_std.sort_values(ascending=False, inplace=True)
         csv_file_path = 'csv/%s_standard_deviation.csv' % topic_name

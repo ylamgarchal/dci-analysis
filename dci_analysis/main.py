@@ -24,6 +24,7 @@ import traceback
 
 from dci_analysis import analyzer
 from dci_analysis import sync_jobs
+from dci_analysis import visualization
 
 
 LOG = logging.getLogger(__name__)
@@ -87,9 +88,23 @@ def analyze():
         LOG.error(traceback.format_exc())
 
 
+def visualize():
+    parser = argparse.ArgumentParser(description='Visualize the evolution of a testcase')
+    parser.add_argument('topic', type=str, help='The topic')
+    parser.add_argument('testcase', type=str, help='The testcase to show')
+    args = parser.parse_args(sys.argv[2:])
+
+    try:
+        app = visualization.dashit(args.topic, args.testcase)
+        app.run_server(debug=True)
+    except Exception:
+        LOG.error(traceback.format_exc())
+
+
 _COMMANDS = {
     'sync': sync,
-    'analyze': analyze
+    'analyze': analyze,
+    'visualize': visualize
 }
 
 
