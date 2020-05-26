@@ -1,0 +1,103 @@
+#menu
+{
+    background-color: black;
+    color:white;
+    width: 10%;
+    text-align: left;
+    border: 1px white dashed;
+    display: flex;
+    flex-direction: column;
+    padding-left: 1%;
+    padding-top: 1%;
+}
+
+#page-content
+{
+    text-align: center;
+    border: 1px black dashed;
+    color: black;
+    margin-left: 10px;
+    padding: 1%;
+    width: 60%;
+}
+
+#container_0
+{
+    display: flex;
+    flex-direction: column;
+}
+
+#container_2
+{
+    display: flex;
+    flex-direction: row;
+}
+
+#container_3
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#container_4
+{
+    display: flex;
+    flex-direction: row;
+}
+
+#container_41
+{
+    display: flex;
+    flex-direction: column;
+    width: 21%;
+}
+
+#container_42
+{
+    display: flex;
+    width: 5%;
+}
+
+#container_43
+{
+    display: flex;
+    flex-direction: column;
+    width: 21%;
+}
+
+#dropdown_topic_baseline
+{
+    width: auto;
+}
+
+label
+{
+    text-align: left;
+}
+
+H1
+{
+    background-color: black;
+    color: white;
+    padding-left:1%;
+}
+
+img
+{
+    background-color: black;
+    color: white;
+    padding-left:1%;
+}
+
+a:link {
+    color: white;
+}
+  
+a:visited {
+    color: white;
+}
+
+br {
+    margin-top: 5%;
+}

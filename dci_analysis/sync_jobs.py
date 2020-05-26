@@ -155,4 +155,5 @@ def sync(dci_context, team_name, topic_name, test_name):
                 junit = get_junit_of_file(dci_context, file['id'])
                 LOG.info('convert junit job %s to csv' % job['id'])
                 test_dict = junit_to_dict(junit)
-                write_test_csv(job['id'], test_path, test_dict)
+                if len(test_dict.keys() >= 470):
+                    write_test_csv(job['id'], test_path, test_dict)
