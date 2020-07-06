@@ -33,6 +33,16 @@ LOG.setLevel(logging.DEBUG)
 HTTP_TIMEOUT = 600
 
 
+X86_REMOTECI = "9b6fb854-6735-4081-96bf-b1986cf6842c"
+PPC_REMOTECI = "207fe1af-7bb2-4204-952a-d340edf9acc1"
+
+REMOTECI_ID = X86_REMOTECI
+
+JOBS_SKIP_LIST = [
+    '6e29c5a2-a352-4ae9-9a9d-6478aea64c26',
+    'a3e50a9f-cb73-43da-923b-f5205ce0f5bf']
+
+
 def get_with_retry(dci_context, uri, timeout=5, nb_retry=5):
     res = None
     for i in range(nb_retry):
@@ -71,7 +81,7 @@ def get_topic_id(dci_context, topic_name):
 
 
 def get_jobs(dci_context, team_id, topic_id):
-    uri = '%s/jobs?where=team_id:%s,topic_id:%s' % \
+    uri = '%s/jobs?where=team_id:%s,topic_id:%s&embed=components' % \
              (dci_context.dci_cs_api, team_id, topic_id)
     res = get_with_retry(dci_context, uri)
 
@@ -98,9 +108,7 @@ def junit_to_dict(junit):
                 key = "%s/%s" % (tc.get('classname'), tc.get('name'))
                 key = key.strip()
                 key = key.replace(',', '_')
-                if tc.get('time') is None:
-                    res[key] = "N/A"
-                else:
+                if tc.get('time'):
                     res[key] = float(tc.get('time'))
     except etree.XMLSyntaxError as e:
         LOG.error('XMLSyntaxError %s' % str(e))
@@ -133,6 +141,7 @@ def get_junit_of_file(dci_context, file_id):
     return res.text
 
 
+
 def sync(dci_context, team_name, topic_name, test_name):
 
     team_id = get_team_id(dci_context, team_name)
@@ -142,8 +151,21 @@ def sync(dci_context, team_name, topic_name, test_name):
     LOG.info('getting jobs...')
     jobs = get_jobs(dci_context, team_id, topic_id)
 
+    if topic_name == 'RHEL-8' or topic_name == "RHEL-8-nightly":
+        topic_name = 'RHEL-8.3'
     LOG.info('convert jobs %s tests to csv files...' % test_name)
     for job in jobs:
+        if job['id'] in JOBS_SKIP_LIST:
+            continue
+        topic_name_in_component = False
+        for component in job['components']:
+            if topic_name.lower() in component['name'].lower():
+                topic_name_in_component = True
+        if not topic_name_in_component:
+            continue
+
+        if job['remoteci_id'] != REMOTECI_ID:
+            continue
         test_path = get_test_path(topic_name, job, test_name)  # noqa
         if os.path.exists(test_path):
             LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
@@ -155,5 +177,32 @@ def sync(dci_context, team_name, topic_name, test_name):
                 junit = get_junit_of_file(dci_context, file['id'])
                 LOG.info('convert junit job %s to csv' % job['id'])
                 test_dict = junit_to_dict(junit)
-                if len(test_dict.keys() >= 470):
+                if len(test_dict.keys()) >= 470:
+                    write_test_csv(job['id'], test_path, test_dict)
+
+def sync2(dci_context, team_name, topic_name, test_name):
+
+    team_id = get_team_id(dci_context, team_name)
+    LOG.info('%s team id %s' % (team_name, team_id))
+    topic_id = get_topic_id(dci_context, topic_name)
+    LOG.info('%s topic id %s' % (topic_name, topic_id))
+    LOG.info('getting jobs...')
+    jobs = get_jobs(dci_context, team_id, topic_id)
+
+    LOG.info('convert jobs %s tests to csv files...' % test_name)
+    for job in jobs:
+        if job['remoteci_id'] != "9b6fb854-6735-4081-96bf-b1986cf6842c":
+            continue
+        test_path = get_test_path(topic_name, job, test_name)  # noqa
+        if os.path.exists(test_path):
+            LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
+            continue
+        files = get_files_of_job(dci_context, job['id'])
+        for file in files:
+            if file['name'] == test_name:
+                LOG.info('download file %s of job %s' % (file['id'], job['id']))  # noqa
+                junit = get_junit_of_file(dci_context, file['id'])
+                LOG.info('convert junit job %s to csv' % job['id'])
+                test_dict = junit_to_dict(junit)
+                if len(test_dict.keys()) >= 470:
                     write_test_csv(job['id'], test_path, test_dict)

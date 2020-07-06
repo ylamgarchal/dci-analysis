@@ -61,7 +61,16 @@ def sync():
 
     if not os.path.exists(args.topic):
         LOG.info('create %s/ directory' % args.topic)
-        os.mkdir(args.topic)
+        if args.topic == 'RHEL-8' or args.topic == 'RHEL-8-nightly':
+            try:
+                os.mkdir('RHEL-8.3')
+            except:
+                pass
+        else:
+            try:
+                os.mkdir(args.topic)
+            except:
+                pass
 
     try:
         sync_jobs.sync(dci_context, args.team, args.topic, args.testname)

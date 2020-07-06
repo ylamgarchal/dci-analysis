@@ -87,7 +87,10 @@ def comparison_with_mean(topic_name_1, topic_name_2):
     html_file_path = '%s/html/%s_mean_vs_%s.html' % (WORKING_DIR, topic_name_1, topic_name_2)
     with open(html_file_path, 'w') as f:
         LOG.info('write file to %s' % html_file_path)
-        compared_jobs.to_html(f, justify='left')
+        if isinstance(compared_jobs, pd.Series):
+            compared_jobs.to_frame().to_html(f, justify='left')
+        else:
+            compared_jobs.to_html(f, justify='left')
     return compared_jobs
 
 
@@ -99,10 +102,9 @@ def comparison_with_median(topic_name_1, topic_name_2):
     jobs = get_jobs_dataset(topic_name_2)
 
     def delta_median(lign):
-        if lign.name not in baseline_jobs.index.values:
-            return "N/A"
-        diff = lign - baseline_jobs_median[lign.name]
-        return (diff * 100.0) / baseline_jobs_median[lign.name]
+        if lign.name in baseline_jobs.index.values:
+            diff = lign - baseline_jobs_median[lign.name]
+            return (diff * 100.0) / baseline_jobs_median[lign.name]
 
     compared_jobs = jobs.apply(delta_median, axis=1)
     csv_file_path = '%s/csv/%s_median_vs_%s.csv' % (WORKING_DIR, topic_name_1, topic_name_2)
@@ -112,7 +114,10 @@ def comparison_with_median(topic_name_1, topic_name_2):
     html_file_path = '%s/html/%s_median_vs_%s.html' % (WORKING_DIR, topic_name_1, topic_name_2)
     with open(html_file_path, 'w') as f:
         LOG.info('write file to %s' % html_file_path)
-        compared_jobs.to_html(f, justify='left')
+        if isinstance(compared_jobs, pd.Series):
+            compared_jobs.to_frame().to_html(f, justify='left')
+        else:
+            compared_jobs.to_html(f, justify='left')
     return compared_jobs
 
 
