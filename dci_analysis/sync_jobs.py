@@ -153,17 +153,21 @@ def sync(dci_context, team_name, topic_name, test_name):
 
     if topic_name == 'RHEL-8' or topic_name == "RHEL-8-nightly":
         topic_name = 'RHEL-8.3'
+    if topic_name == 'RHEL-7' or topic_name == "RHEL-7-nightly":
+        topic_name = 'RHEL-7.8'
+    topic_name_component = topic_name
+    if 'milestone' in topic_name_component:
+        topic_name_component = topic_name_component.replace('-milestone', '')
     LOG.info('convert jobs %s tests to csv files...' % test_name)
     for job in jobs:
         if job['id'] in JOBS_SKIP_LIST:
             continue
         topic_name_in_component = False
         for component in job['components']:
-            if topic_name.lower() in component['name'].lower():
+             if topic_name_component.lower() in component['name'].lower():
                 topic_name_in_component = True
         if not topic_name_in_component:
             continue
-
         if job['remoteci_id'] != REMOTECI_ID:
             continue
         test_path = get_test_path(topic_name, job, test_name)  # noqa

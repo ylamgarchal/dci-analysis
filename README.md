@@ -82,3 +82,22 @@ INFO - done
 ## Reading results
 
 Results are available in csv/ and html/ directories.
+
+## Dashboard
+
+To run the dash type the following:
+
+```console
+[yassine@Bouceka dci-analysis]$ python dashboard/app.py
+Running on http://127.0.0.1:8050/
+Debugger PIN: 854-961-740
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+Running on http://127.0.0.1:8050/
+Debugger PIN: 178-967-504
+```
+
+Then fo to http://127.0.0.1:8050 to visit the dashboard page

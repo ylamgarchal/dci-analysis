@@ -66,6 +66,11 @@ def sync():
                 os.mkdir('RHEL-8.3')
             except:
                 pass
+        elif args.topic == 'RHEL-7' or args.topic == 'RHEL-7-nightly':
+            try:
+                os.mkdir('RHEL-7.8')
+            except:
+                pass
         else:
             try:
                 os.mkdir(args.topic)
