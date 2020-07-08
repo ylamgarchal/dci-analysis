@@ -33,7 +33,7 @@ First, get your remoteci credentials from the DCI dashboard.
 Synchronize all the jobs from the server to your local storage.
 
 ```console
-[yassine@Bouceka dci-analysis]$ dci-analyze sync TEAM TOPIC Testname
+[yassine@Bouceka dci-analysis]$ dci-analysis sync TEAM TOPIC Testname
 ```
 
 This command will create a TOPIC/ directory with all the Testname tests from the jobs
@@ -42,7 +42,7 @@ that belongs to the team TEAM, in csv format.
 Finally, run the analyzer.
 
 ```console
-[yassine@Bouceka dci-analysis]$ dci-analyze analyze TOPIC_BASELINE TOPIC
+[yassine@Bouceka dci-analysis]$ dci-analysis analyze TOPIC_BASELINE TOPIC
 ```
 This will create several results in csv format:
 
@@ -59,9 +59,9 @@ This will create several results in csv format:
 
 ```console
 [yassine@Bouceka dci-analysis]$ source ~/dci/my-remoteci.rc.sh
-[yassine@Bouceka dci-analysis]$ dci-analyze sync MyTeam RHEL-8.0 Performance
-[yassine@Bouceka dci-analysis]$ dci-analyze sync MyTeam RHEL-8.1 Performance
-[yassine@Bouceka dci-analysis]$ dci-analyze analyze RHEL-8.0 RHEL-8.1
+[yassine@Bouceka dci-analysis]$ dci-analysis sync MyTeam RHEL-8.0 Performance
+[yassine@Bouceka dci-analysis]$ dci-analysis sync MyTeam RHEL-8.1 Performance
+[yassine@Bouceka dci-analysis]$ dci-analysis analyze RHEL-8.0 RHEL-8.1
 INFO - create csv/ directory
 INFO - create html/ directory
 INFO - compute standard deviation of RHEL-8.0
@@ -89,14 +89,14 @@ To run the dash type the following:
 
 ```console
 [yassine@Bouceka dci-analysis]$ python dashboard/app.py
-Running on http://127.0.0.1:8050/
+Running on http://0.0.0.0:8050/
 Debugger PIN: 854-961-740
  * Serving Flask app "app" (lazy loading)
  * Environment: production
    WARNING: This is a development server. Do not use it in a production deployment.
    Use a production WSGI server instead.
  * Debug mode: on
-Running on http://127.0.0.1:8050/
+Running on http://0.0.0.0:8050/
 Debugger PIN: 178-967-504
 ```
 
