@@ -4,6 +4,8 @@ import dash_html_components as html
 
 from dci_analysis import analyzer
 
+import os
+
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 app.layout = html.Div(id='container_0', children=[
@@ -190,4 +192,4 @@ def update_output(n_clicks, baseline_topic, baseline_computation, topic):
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', debug=True)
+    app.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)
