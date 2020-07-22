@@ -30,6 +30,7 @@ setuptools.setup(
     description='DCI Analysis',
     long_description=readme,
     install_requires=[],
+    include_package_data=True,
     url='https://github.com/redhat-cip/dci-analysis',
     license='Apache v2.0',
     classifiers=[

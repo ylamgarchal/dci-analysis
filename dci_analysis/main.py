@@ -23,6 +23,7 @@ import sys
 import traceback
 
 from dci_analysis import analyzer
+from dci_analysis import app
 from dci_analysis import sync_jobs
 from dci_analysis import visualization
 
@@ -36,14 +37,7 @@ LOG.addHandler(streamhandler)
 LOG.setLevel(logging.DEBUG)
 
 
-def sync():
-    parser = argparse.ArgumentParser(description='Synchronize jobs locally')
-
-    parser.add_argument('team', type=str, help='The name of the user\'s team')
-    parser.add_argument('topic', type=str, help='The name of the topic to pull jobs from')  # noqa
-    parser.add_argument('testname', type=str, help='The name of the job\'s test')  # noqa
-    args = parser.parse_args(sys.argv[2:])
-
+def sync(team, topic, testname, working_dir):
     if 'DCI_CS_URL' not in os.environ or \
        'DCI_CLIENT_ID' not in os.environ or \
        'DCI_API_SECRET' not in os.environ:
@@ -59,26 +53,28 @@ def sync():
         dci_client_id=os.environ['DCI_CLIENT_ID'],
         dci_api_secret=os.environ['DCI_API_SECRET'])
 
-    if not os.path.exists(args.topic):
-        LOG.info('create %s/ directory' % args.topic)
-        if args.topic == 'RHEL-8' or args.topic == 'RHEL-8-nightly':
+    if not os.path.exists('%s/%s' % (working_dir, topic)):
+        if topic == 'RHEL-8' or topic == 'RHEL-8-nightly':
             try:
-                os.mkdir('RHEL-8.3')
+                LOG.info('create %s/RHEL-8.3/ directory' % working_dir)
+                os.mkdir('%s/RHEL-8.3' % working_dir)
             except:
                 pass
-        elif args.topic == 'RHEL-7' or args.topic == 'RHEL-7-nightly':
+        elif topic == 'RHEL-7' or topic == 'RHEL-7-nightly':
             try:
-                os.mkdir('RHEL-7.8')
+                LOG.info('create %s/RHEL-7.8/ directory' % working_dir)
+                os.mkdir('%s/RHEL-7.8' % working_dir)
             except:
                 pass
         else:
             try:
-                os.mkdir(args.topic)
+                LOG.info('create %s/%s/ directory' % (working_dir, topic))
+                os.mkdir('%s/%s' % (working_dir, topic))
             except:
                 pass
 
     try:
-        sync_jobs.sync(dci_context, args.team, args.topic, args.testname)
+        sync_jobs.sync(dci_context, team, topic, testname, working_dir)
         LOG.info('done')
     except Exception:
         LOG.error(traceback.format_exc())
@@ -102,42 +98,35 @@ def analyze():
         LOG.error(traceback.format_exc())
 
 
-def visualize():
-    parser = argparse.ArgumentParser(description='Visualize the evolution of a testcase')
-    parser.add_argument('topic', type=str, help='The topic')
-    parser.add_argument('testcase', type=str, help='The testcase to show')
-    args = parser.parse_args(sys.argv[2:])
-
-    try:
-        app = visualization.dashit(args.topic, args.testcase)
-        app.run_server(debug=True)
-    except Exception:
-        LOG.error(traceback.format_exc())
-
-
-_COMMANDS = {
-    'sync': sync,
-    'analyze': analyze,
-    'visualize': visualize
-}
-
-
 def main():
     parser = argparse.ArgumentParser(
         description='DCI Analyzing command line tool')
     parser.add_argument(
-        dest='command',
-        type=str,
-        choices=_COMMANDS.keys(),
-        help='Command to run')
+        "--working-dir",
+        required=True,
+        help="DCI login or 'DCI_LOGIN' environment variable.",
+    )
 
-    args = parser.parse_args(sys.argv[1:2])
-    if args.command not in _COMMANDS.keys():
-            print('Unrecognized command')
-            parser.print_usage()
-            sys.exit(1)
+    subparsers = parser.add_subparsers()
+    p = subparsers.add_parser(
+        "sync", help="sync topics results"
+    )
+    p.add_argument('team', type=str, help='The name of the user\'s team')
+    p.add_argument('topic', type=str, help='The name of the topic to pull jobs from')  # noqa
+    p.add_argument('testname', type=str, help='The name of the job\'s test')  # noqa
+    p.set_defaults(command="sync")
 
-    _COMMANDS[args.command]()
+    p = subparsers.add_parser(
+        "dashboard", help="run the dashboard server"
+    )
+    p.set_defaults(command="dashboard")
+
+    args = parser.parse_args(sys.argv[1:])
+    if args.command == 'sync':
+        sync(args.team, args.topic, args.testname, args.working_dir)
+    elif args.command == 'dashboard':
+        analyzer.WORKING_DIR = args.working_dir
+        app.dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)
     sys.exit(0)
 
 

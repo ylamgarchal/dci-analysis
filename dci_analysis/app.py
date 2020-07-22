@@ -6,9 +6,9 @@ from dci_analysis import analyzer
 
 import os
 
-app = dash.Dash(__name__, suppress_callback_exceptions=True)
+dashboard = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-app.layout = html.Div(id='container_0', children=[
+dashboard.layout = html.Div(id='container_0', children=[
     dcc.Location(id='url', refresh=False),
     html.Div(id='container_1', children=[
         html.H1('DCI Analysis')
@@ -24,10 +24,10 @@ app.layout = html.Div(id='container_0', children=[
     )
 ])
 
-app.title = "DCI Analysis"
+dashboard.title = "DCI Analysis"
 
 
-@app.callback(dash.dependencies.Output('page-content', 'children'),
+@dashboard.callback(dash.dependencies.Output('page-content', 'children'),
               [dash.dependencies.Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/':
@@ -91,7 +91,7 @@ def display_page(pathname):
 
 
 
-@app.callback([dash.dependencies.Output('comparison', 'children'),
+@dashboard.callback([dash.dependencies.Output('comparison', 'children'),
               dash.dependencies.Output('trend', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks')],
               [dash.dependencies.State('dropdown_topic_baseline', 'value'),
@@ -192,4 +192,4 @@ def update_output(n_clicks, baseline_topic, baseline_computation, topic):
 
 
 if __name__ == '__main__':
-    app.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)
+    dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)

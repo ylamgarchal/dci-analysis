@@ -115,9 +115,9 @@ def junit_to_dict(junit):
     return res
 
 
-def get_test_path(topic_name, job, test_name):
+def get_test_path(working_dir, topic_name, job, test_name):
     test_csv_name = '%s_%s_%s.csv' % (job['created_at'], job['id'], test_name)
-    path = '%s/%s' % (topic_name, test_csv_name)
+    path = '%s/%s/%s' % (working_dir, topic_name, test_csv_name)
     return os.path.abspath(path)
 
 
@@ -142,7 +142,7 @@ def get_junit_of_file(dci_context, file_id):
 
 
 
-def sync(dci_context, team_name, topic_name, test_name):
+def sync(dci_context, team_name, topic_name, test_name, working_dir):
 
     team_id = get_team_id(dci_context, team_name)
     LOG.info('%s team id %s' % (team_name, team_id))
@@ -164,40 +164,13 @@ def sync(dci_context, team_name, topic_name, test_name):
             continue
         topic_name_in_component = False
         for component in job['components']:
-             if topic_name_component.lower() in component['name'].lower():
+            if topic_name_component.lower() in component['name'].lower():
                 topic_name_in_component = True
         if not topic_name_in_component:
             continue
         if job['remoteci_id'] != REMOTECI_ID:
             continue
-        test_path = get_test_path(topic_name, job, test_name)  # noqa
-        if os.path.exists(test_path):
-            LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
-            continue
-        files = get_files_of_job(dci_context, job['id'])
-        for file in files:
-            if file['name'] == test_name:
-                LOG.info('download file %s of job %s' % (file['id'], job['id']))  # noqa
-                junit = get_junit_of_file(dci_context, file['id'])
-                LOG.info('convert junit job %s to csv' % job['id'])
-                test_dict = junit_to_dict(junit)
-                if len(test_dict.keys()) >= 470:
-                    write_test_csv(job['id'], test_path, test_dict)
-
-def sync2(dci_context, team_name, topic_name, test_name):
-
-    team_id = get_team_id(dci_context, team_name)
-    LOG.info('%s team id %s' % (team_name, team_id))
-    topic_id = get_topic_id(dci_context, topic_name)
-    LOG.info('%s topic id %s' % (topic_name, topic_id))
-    LOG.info('getting jobs...')
-    jobs = get_jobs(dci_context, team_id, topic_id)
-
-    LOG.info('convert jobs %s tests to csv files...' % test_name)
-    for job in jobs:
-        if job['remoteci_id'] != "9b6fb854-6735-4081-96bf-b1986cf6842c":
-            continue
-        test_path = get_test_path(topic_name, job, test_name)  # noqa
+        test_path = get_test_path(working_dir, topic_name, job, test_name)  # noqa
         if os.path.exists(test_path):
             LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
             continue

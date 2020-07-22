@@ -32,7 +32,9 @@ streamhandler.setFormatter(formatter)
 LOG.addHandler(streamhandler)
 LOG.setLevel(logging.DEBUG)
 
-WORKING_DIR = os.getenv('DCI_ANALYSIS_WORKING_DIR', '/home/yassine/dci/dci-analysis')
+WORKING_DIR = os.getenv('DCI_ANALYSIS_WORKING_DIR',
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
+
 
 def get_sorted_csv_files(csv_files, topic_name):
     sorted_csv_files = []
@@ -45,6 +47,7 @@ def get_sorted_csv_files(csv_files, topic_name):
 
 
 def get_jobs_dataset(topic_name):
+    LOG.info('get files files from %s/%s' % (WORKING_DIR, topic_name))
     csv_files = glob.glob('%s/%s/*' % (WORKING_DIR, topic_name))
     sorted_csv_files = get_sorted_csv_files(csv_files, topic_name)
     first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:]
@@ -108,10 +111,18 @@ def comparison_with_median(topic_name_1, topic_name_2):
 
     compared_jobs = jobs.apply(delta_median, axis=1)
     csv_file_path = '%s/csv/%s_median_vs_%s.csv' % (WORKING_DIR, topic_name_1, topic_name_2)
+    try:
+        os.mkdir('%s/csv' % (WORKING_DIR))
+    except:
+        pass
     LOG.info('write file to %s' % csv_file_path)
     compared_jobs.to_csv(csv_file_path, sep=',')
 
     html_file_path = '%s/html/%s_median_vs_%s.html' % (WORKING_DIR, topic_name_1, topic_name_2)
+    try:
+        os.mkdir('%s/html' % (WORKING_DIR))
+    except:
+        pass
     with open(html_file_path, 'w') as f:
         LOG.info('write file to %s' % html_file_path)
         if isinstance(compared_jobs, pd.Series):
