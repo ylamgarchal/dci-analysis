@@ -116,7 +116,8 @@ def junit_to_dict(junit):
 
 
 def get_test_path(working_dir, topic_name, job, test_name):
-    test_csv_name = '%s_%s_%s.csv' % (job['created_at'], job['id'], test_name)
+    job_date = job['created_at'].split('T')[0]
+    test_csv_name = '%s_%s_%s.csv' % (job_date, job['id'], test_name)
     path = '%s/%s/%s' % (working_dir, topic_name, test_csv_name)
     return os.path.abspath(path)
 
@@ -181,5 +182,5 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
                 junit = get_junit_of_file(dci_context, file['id'])
                 LOG.info('convert junit job %s to csv' % job['id'])
                 test_dict = junit_to_dict(junit)
-                if len(test_dict.keys()) >= 470:
+                if len(test_dict.keys()) >= 680:
                     write_test_csv(job['id'], test_path, test_dict)

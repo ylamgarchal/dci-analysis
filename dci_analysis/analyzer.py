@@ -14,7 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime as dt
+from datetime import datetime as dt
+from datetime import timedelta
 import glob
 import logging
 import os
@@ -36,20 +37,37 @@ WORKING_DIR = os.getenv('DCI_ANALYSIS_WORKING_DIR',
                         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
 
 
+def string_to_date(date):
+    if 'T' in date:
+        date = date.split('T')[0]
+    return dt.strptime(date, '%Y-%m-%d')
+
+
 def get_sorted_csv_files(csv_files, topic_name):
     sorted_csv_files = []
     for cf in csv_files:
         cf = cf.split('/')[-1]
         date, file_name = cf.split('_', 1)
         sorted_csv_files.append({'date': date, 'file_name': file_name})
-    sorted_csv_files.sort(key=lambda a: dt.datetime.strptime(a['date'], '%Y-%m-%dT%H:%M:%S.%f'))  # noqa
+    sorted_csv_files.sort(key=lambda a: dt.strptime(a['date'], '%Y-%m-%d'))  # noqa
     return ['%s/%s_%s' % (topic_name, scf['date'], scf['file_name']) for scf in sorted_csv_files]  # noqa
 
 
-def get_jobs_dataset(topic_name):
+def get_files_between_start_and_end_date(csv_files, start_date, end_date):
+    files = []
+    for cf in csv_files:
+        date = cf.split('/')[-1].split('_')[0]
+        date = string_to_date(date)
+        if date >= start_date and date <= end_date:
+            files.append(cf)
+    return files
+
+
+def get_jobs_dataset(topic_name, start_date, end_date):
     LOG.info('get files files from %s/%s' % (WORKING_DIR, topic_name))
     csv_files = glob.glob('%s/%s/*' % (WORKING_DIR, topic_name))
     sorted_csv_files = get_sorted_csv_files(csv_files, topic_name)
+    sorted_csv_files = get_files_between_start_and_end_date(sorted_csv_files, start_date, end_date)
     first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:]
     abs_path_cf = os.path.abspath('%s/%s' % (WORKING_DIR, first_csf_file))
     jobs_dataset = pd.read_csv(abs_path_cf, delimiter=',', engine='python', index_col='testname')  # noqa
@@ -69,12 +87,12 @@ def write_series_csv(file_path, series, header):
             f.write('%s,%s\n' % (tc, time))
 
 
-def comparison_with_mean(topic_name_1, topic_name_2):
+def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date, topic_start_date, topic_end_date):
     # compare baseline mean with jobs
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1)
+    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date)
     baseline_jobs_mean = baseline_jobs.mean(axis=1)
-    jobs = get_jobs_dataset(topic_name_2)
+    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date)
 
     def delta_mean(lign):
         if lign.name not in baseline_jobs.index.values:
@@ -97,12 +115,12 @@ def comparison_with_mean(topic_name_1, topic_name_2):
     return compared_jobs
 
 
-def comparison_with_median(topic_name_1, topic_name_2):
+def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date, topic_start_date, topic_end_date):
     # compare baseline median with jobs
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1)
+    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date)
     baseline_jobs_median = baseline_jobs.median(axis=1)
-    jobs = get_jobs_dataset(topic_name_2)
+    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date)
 
     def delta_median(lign):
         if lign.name in baseline_jobs.index.values:
