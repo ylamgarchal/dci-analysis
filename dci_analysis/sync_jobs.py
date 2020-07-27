@@ -151,6 +151,7 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
     LOG.info('%s topic id %s' % (topic_name, topic_id))
     LOG.info('getting jobs...')
     jobs = get_jobs(dci_context, team_id, topic_id)
+    jobs_tags = {}
 
     if topic_name == 'RHEL-8' or topic_name == "RHEL-8-nightly":
         topic_name = 'RHEL-8.3'
@@ -184,3 +185,8 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
                 test_dict = junit_to_dict(junit)
                 if len(test_dict.keys()) >= 680:
                     write_test_csv(job['id'], test_path, test_dict)
+                    base_test_path = os.path.basename(test_path)
+                    jobs_tags[base_test_path] = job['tags']
+        
+    with open('%s/%s/index_tags.json' % (working_dir, topic_name), 'w') as f:
+        f.write(json.dumps(jobs_tags))

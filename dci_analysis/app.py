@@ -60,6 +60,9 @@ def display_page(pathname):
                        value='median'
                    ),
                    html.Br(),
+                   html.Label('Tags'),
+                   dcc.Input(id='baseline_tags'),
+                   html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
                            id='baseline_timeframe'
@@ -81,6 +84,9 @@ def display_page(pathname):
                         ],
                         value='RHEL-8.2-milestone'
                    ),
+                   html.Br(),
+                   html.Label('Tags'),
+                   dcc.Input(id='topic2_tags'),
                    html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
@@ -109,12 +115,15 @@ def display_page(pathname):
                dash.dependencies.Input('baseline_timeframe', 'start_date'),
                dash.dependencies.Input('baseline_timeframe', 'end_date'),
                dash.dependencies.Input('topic_timeframe', 'start_date'),
-               dash.dependencies.Input('topic_timeframe', 'end_date')],
+               dash.dependencies.Input('topic_timeframe', 'end_date'),
+               dash.dependencies.Input('baseline_tags', 'value'),
+               dash.dependencies.Input('topic2_tags', 'value')],
               [dash.dependencies.State('dropdown_topic_baseline', 'value'),
                dash.dependencies.State('baseline_computation', 'value'),
                dash.dependencies.State('topic', 'value')])
 def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_date,
-                  topic_end_date, baseline_topic, baseline_computation, topic):
+                  topic_end_date, baseline_tags, topic2_tags, baseline_topic,
+                  baseline_computation, topic):
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
                 'Trend of the view between topics !')
@@ -123,6 +132,10 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
         baseline_end_date = analyzer.string_to_date(baseline_end_date)
         topic_start_date = analyzer.string_to_date(topic_start_date)
         topic_end_date = analyzer.string_to_date(topic_end_date)
+        if baseline_tags:
+            baseline_tags = baseline_tags.split(',')
+        if topic2_tags:
+            topic2_tags = topic2_tags.split(',')
 
         if baseline_computation == 'median':
             compared_jobs = analyzer.comparison_with_median(
@@ -131,7 +144,9 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 baseline_start_date,
                 baseline_end_date,
                 topic_start_date,
-                topic_end_date)
+                topic_end_date,
+                baseline_tags,
+                topic2_tags)
         else:
             compared_jobs = analyzer.comparison_with_mean(
                 baseline_topic,
@@ -139,7 +154,9 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 baseline_start_date,
                 baseline_end_date,
                 topic_start_date,
-                topic_end_date)
+                topic_end_date,
+                baseline_tags,
+                topic2_tags)
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
             min = int(min)
@@ -226,7 +243,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
 
 
 def get_min_max_date_from_topic(topic_name):
-    csv_files = glob.glob('%s/%s/*' % (analyzer.WORKING_DIR, topic_name))
+    csv_files = glob.glob('%s/%s/*.csv' % (analyzer.WORKING_DIR, topic_name))
     sorted_csv_files = analyzer.get_sorted_csv_files(csv_files, topic_name)
     if len(sorted_csv_files) >= 2:
         min_file = sorted_csv_files[0]

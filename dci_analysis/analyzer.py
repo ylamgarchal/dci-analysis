@@ -17,6 +17,7 @@
 from datetime import datetime as dt
 from datetime import timedelta
 import glob
+import json
 import logging
 import os
 import sys
@@ -63,9 +64,27 @@ def get_files_between_start_and_end_date(csv_files, start_date, end_date):
     return files
 
 
-def get_jobs_dataset(topic_name, start_date, end_date):
+def filter_by_tags(jobs, topic_name, tags):
+    result_jobs = []
+    if not tags:
+        return jobs
+    with open('%s/%s/index_tags.json' % (WORKING_DIR, topic_name), 'r') as f:
+        index_tags = f.read()
+        index_tags = json.loads(index_tags)
+        for job in jobs:
+            job = os.path.basename(job)
+            if job in index_tags:
+                if set(tags).issubset(set(index_tags[job])):
+                    result_jobs.append(job)
+    return result_jobs
+
+
+def get_jobs_dataset(topic_name, start_date, end_date, tags):
     LOG.info('get files files from %s/%s' % (WORKING_DIR, topic_name))
-    csv_files = glob.glob('%s/%s/*' % (WORKING_DIR, topic_name))
+    csv_files = glob.glob('%s/%s/*.csv' % (WORKING_DIR, topic_name))
+    print('len1 %s' % len(csv_files))
+    csv_files = filter_by_tags(csv_files, topic_name, tags)
+    print('len2 %s' % len(csv_files))
     sorted_csv_files = get_sorted_csv_files(csv_files, topic_name)
     sorted_csv_files = get_files_between_start_and_end_date(sorted_csv_files, start_date, end_date)
     first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:]
@@ -87,12 +106,13 @@ def write_series_csv(file_path, series, header):
             f.write('%s,%s\n' % (tc, time))
 
 
-def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date, topic_start_date, topic_end_date):
+def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
+                         topic_start_date, topic_end_date, baseline_tags, topic2_tags):
     # compare baseline mean with jobs
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date)
+    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
     baseline_jobs_mean = baseline_jobs.mean(axis=1)
-    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date)
+    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags)
 
     def delta_mean(lign):
         if lign.name not in baseline_jobs.index.values:
@@ -115,12 +135,13 @@ def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseli
     return compared_jobs
 
 
-def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date, topic_start_date, topic_end_date):
+def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
+                           topic_start_date, topic_end_date, baseline_tags, topic2_tags):
     # compare baseline median with jobs
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date)
+    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
     baseline_jobs_median = baseline_jobs.median(axis=1)
-    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date)
+    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags)
 
     def delta_median(lign):
         if lign.name in baseline_jobs.index.values:
