@@ -146,7 +146,8 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 topic_start_date,
                 topic_end_date,
                 baseline_tags,
-                topic2_tags)
+                topic2_tags,
+                True)
         else:
             compared_jobs = analyzer.comparison_with_mean(
                 baseline_topic,
@@ -156,7 +157,8 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 topic_start_date,
                 topic_end_date,
                 baseline_tags,
-                topic2_tags)
+                topic2_tags,
+                True)
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
             min = int(min)
@@ -207,6 +209,27 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 }
             }
         )
+
+        if baseline_computation == 'median':
+            compared_jobs = analyzer.comparison_with_median(
+                baseline_topic,
+                topic,
+                baseline_start_date,
+                baseline_end_date,
+                topic_start_date,
+                topic_end_date,
+                baseline_tags,
+                topic2_tags)
+        else:
+            compared_jobs = analyzer.comparison_with_mean(
+                baseline_topic,
+                topic,
+                baseline_start_date,
+                baseline_end_date,
+                topic_start_date,
+                topic_end_date,
+                baseline_tags,
+                topic2_tags)
 
         trend_values = []
         for j in range(0, compared_jobs.shape[1]):
