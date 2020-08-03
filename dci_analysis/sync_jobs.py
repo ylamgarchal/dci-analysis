@@ -183,7 +183,7 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
                 junit = get_junit_of_file(dci_context, file['id'])
                 LOG.info('convert junit job %s to csv' % job['id'])
                 test_dict = junit_to_dict(junit)
-                if len(test_dict.keys()) >= 680:
+                if len(test_dict.keys()) >= 697:
                     write_test_csv(job['id'], test_path, test_dict)
                     base_test_path = os.path.basename(test_path)
                     jobs_tags[base_test_path] = job['tags']
