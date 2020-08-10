@@ -53,20 +53,20 @@ def display_page(pathname):
                         value='RHEL-8.1'
                    ),
                    html.Br(),
-                   dcc.RadioItems(
-                       id='baseline_computation',
-                       options=[{'label': 'Mean', 'value': 'mean'},
-                                {'label': 'Median', 'value': 'median'}],
-                       value='median'
-                   ),
-                   html.Br(),
                    html.Label('Tags'),
                    dcc.Input(id='baseline_tags'),
                    html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
                            id='baseline_timeframe'
-                       ))
+                       )),
+                   html.Br(),
+                   dcc.RadioItems(
+                       id='baseline_computation',
+                       options=[{'label': 'Mean', 'value': 'mean'},
+                                {'label': 'Median', 'value': 'median'}],
+                       value='median'
+                   ),
                 ]),
                 html.Div(id='container_42'),
                 html.Div(id='container_43', children=[
@@ -129,9 +129,9 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 'Trend of the view between topics !')
     else:
         baseline_start_date = analyzer.string_to_date(baseline_start_date)
-        baseline_end_date = analyzer.string_to_date(baseline_end_date)
+        baseline_end_date = analyzer.string_to_date(baseline_end_date) - timedelta(days=1)
         topic_start_date = analyzer.string_to_date(topic_start_date)
-        topic_end_date = analyzer.string_to_date(topic_end_date)
+        topic_end_date = analyzer.string_to_date(topic_end_date) - timedelta(days=1)
         if baseline_tags:
             baseline_tags = baseline_tags.split(',')
         if topic2_tags:

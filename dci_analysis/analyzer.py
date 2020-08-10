@@ -82,14 +82,13 @@ def filter_by_tags(jobs, topic_name, tags):
 def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False):
     LOG.info('get files files from %s/%s' % (WORKING_DIR, topic_name))
     csv_files = glob.glob('%s/%s/*.csv' % (WORKING_DIR, topic_name))
-    print('len1 %s' % len(csv_files))
     csv_files = filter_by_tags(csv_files, topic_name, tags)
-    print('len2 %s' % len(csv_files))
     sorted_csv_files = get_sorted_csv_files(csv_files, topic_name)
     sorted_csv_files = get_files_between_start_and_end_date(sorted_csv_files, start_date, end_date)
     if latest_job is True:
         sorted_csv_files = sorted_csv_files[-1:]
-    first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:]
+
+    first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:] if len(sorted_csv_files) > 1 else []
     abs_path_cf = os.path.abspath('%s/%s' % (WORKING_DIR, first_csf_file))
     jobs_dataset = pd.read_csv(abs_path_cf, delimiter=',', engine='python', index_col='testname')  # noqa
 
@@ -142,8 +141,10 @@ def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, base
     # compare baseline median with jobs
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
     baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
+    print('shape baseline jobs: %s,%s' % baseline_jobs.shape)
     baseline_jobs_median = baseline_jobs.median(axis=1)
     jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, topic2_latest_job)
+    print('shape topic2 jobs: %s,%s' % jobs.shape)
 
     def delta_median(lign):
         if lign.name in baseline_jobs.index.values:
