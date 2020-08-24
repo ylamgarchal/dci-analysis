@@ -156,7 +156,7 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
     if topic_name == 'RHEL-8' or topic_name == "RHEL-8-nightly":
         topic_name = 'RHEL-8.3'
     if topic_name == 'RHEL-7' or topic_name == "RHEL-7-nightly":
-        topic_name = 'RHEL-7.8'
+        topic_name = 'RHEL-7.9'
     topic_name_component = topic_name
     if 'milestone' in topic_name_component:
         topic_name_component = topic_name_component.replace('-milestone', '')

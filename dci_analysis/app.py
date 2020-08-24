@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -42,13 +43,20 @@ def display_page(pathname):
                     dcc.Dropdown(
                         id='dropdown_topic_baseline',
                         options=[
+                            {'label': 'RHEL-7.6-milestone', 'value': 'RHEL-7.6-milestone'},
+                            {'label': 'RHEL-7.7-milestone', 'value': 'RHEL-7.7-milestone'},
+                            {'label': 'RHEL-7.8-milestone', 'value': 'RHEL-7.8-milestone'},
+                            {'label': 'RHEL-7.9-milestone', 'value': 'RHEL-7.9-milestone'},
                             {'label': 'RHEL-7.6', 'value': 'RHEL-7.6'},
                             {'label': 'RHEL-7.7', 'value': 'RHEL-7.7'},
+                            {'label': 'RHEL-7.8', 'value': 'RHEL-7.8'},
                             {'label': 'RHEL-8.0', 'value': 'RHEL-8.0'},
                             {'label': 'RHEL-8.1', 'value': 'RHEL-8.1'},
                             {'label': 'RHEL-8.2', 'value': 'RHEL-8.2'},
-                            {'label': 'RHEL-8.3', 'value': 'RHEL-8.3'},
-                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'}
+                            {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
+                            {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
+                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
+                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
                         ],
                         value='RHEL-8.1'
                    ),
@@ -74,13 +82,20 @@ def display_page(pathname):
                     dcc.Dropdown(
                         id='topic',
                         options=[
+                            {'label': 'RHEL-7.6-milestone', 'value': 'RHEL-7.6-milestone'},
+                            {'label': 'RHEL-7.7-milestone', 'value': 'RHEL-7.7-milestone'},
+                            {'label': 'RHEL-7.8-milestone', 'value': 'RHEL-7.8-milestone'},
+                            {'label': 'RHEL-7.9-milestone', 'value': 'RHEL-7.9-milestone'},
                             {'label': 'RHEL-7.6', 'value': 'RHEL-7.6'},
                             {'label': 'RHEL-7.7', 'value': 'RHEL-7.7'},
+                            {'label': 'RHEL-7.8', 'value': 'RHEL-7.8'},
                             {'label': 'RHEL-8.0', 'value': 'RHEL-8.0'},
                             {'label': 'RHEL-8.1', 'value': 'RHEL-8.1'},
                             {'label': 'RHEL-8.2', 'value': 'RHEL-8.2'},
-                            {'label': 'RHEL-8.3', 'value': 'RHEL-8.3'},
-                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'}
+                            {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
+                            {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
+                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
+                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
                         ],
                         value='RHEL-8.2-milestone'
                    ),
@@ -93,12 +108,22 @@ def display_page(pathname):
                            id='topic_timeframe'
                        )),
                    html.Br(),
+                   dcc.RadioItems(
+                       id='topic_computation',
+                       options=[{'label': 'Mean', 'value': 'mean'},
+                                {'label': 'Median', 'value': 'median'},
+                                {'label': 'Latest', 'value': 'latest'}],
+                       value='latest'
+                   ),
+                   html.Br(),
                    html.Button(id='submit-button-comparison', n_clicks=0, children='Compute')
                 ])
             ]),
             html.Div(id='container_5', children=[
                 html.Br(),
                 html.Div(id='comparison'),
+                html.Br(),
+                html.Div(id='comparison_details'),
                 html.Br(),
                 html.Div(id='trend')
             ])
@@ -110,6 +135,7 @@ def display_page(pathname):
 
 
 @dashboard.callback([dash.dependencies.Output('comparison', 'children'),
+              dash.dependencies.Output('comparison_details', 'children'),
               dash.dependencies.Output('trend', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks'),
                dash.dependencies.Input('baseline_timeframe', 'start_date'),
@@ -120,12 +146,14 @@ def display_page(pathname):
                dash.dependencies.Input('topic2_tags', 'value')],
               [dash.dependencies.State('dropdown_topic_baseline', 'value'),
                dash.dependencies.State('baseline_computation', 'value'),
-               dash.dependencies.State('topic', 'value')])
+               dash.dependencies.State('topic', 'value'),
+               dash.dependencies.State('topic_computation', 'value')])
 def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_date,
                   topic_end_date, baseline_tags, topic2_tags, baseline_topic,
-                  baseline_computation, topic):
+                  baseline_computation, topic, topic_computation):
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
+                'Data table comparison details !',
                 'Trend of the view between topics !')
     else:
         baseline_start_date = analyzer.string_to_date(baseline_start_date)
@@ -147,7 +175,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 topic_end_date,
                 baseline_tags,
                 topic2_tags,
-                True)
+                topic_computation)
         else:
             compared_jobs = analyzer.comparison_with_mean(
                 baseline_topic,
@@ -158,7 +186,8 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 topic_end_date,
                 baseline_tags,
                 topic2_tags,
-                True)
+                topic_computation)
+        
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
             min = int(min)
@@ -199,7 +228,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                     },
                 ],
                 'layout': {
-                    'title': 'Baseline %s/%s vs %s' % (baseline_topic, baseline_computation, topic),
+                    'title': 'Baseline %s/%s vs %s/%s' % (baseline_topic, baseline_computation, topic, topic_computation),
                     'xaxis':{
                         'title':'Intervals of deltas (percentage), lower is better'
                     },
@@ -208,6 +237,24 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                     },
                 }
             }
+        )
+
+        data_table = []
+        job_id=compared_jobs.columns.to_list()[0]
+        compared_jobs.sort_values(by=job_id, ascending=False, inplace=True)
+        testcases = compared_jobs.index.to_list()
+        data = []
+        for testcase in testcases:
+            if compared_jobs.loc[testcase, job_id] >= 15:
+                data.append({'testcase': testcase,
+                             'value': compared_jobs.loc[testcase, job_id]})
+        comparisons_details = dash_table.DataTable(
+            id='table',
+            columns=[{"name": "testcase", "id": "testcase"},
+                     {"name": "value", "id": "value"}],
+            data=data,
+            page_current=0,
+            page_size=15
         )
 
         if baseline_computation == 'median':
@@ -262,7 +309,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             }
         )
 
-        return (comparisons, trends)
+        return (comparisons, comparisons_details, trends)
 
 
 def get_min_max_date_from_topic(topic_name):
@@ -297,4 +344,4 @@ def update_topic_timeframe(topic):
 
 
 if __name__ == '__main__':
-    dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)
+    dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 1080), debug=True)

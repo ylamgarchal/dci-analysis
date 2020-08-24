@@ -108,12 +108,23 @@ def write_series_csv(file_path, series, header):
 
 
 def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
-                         topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_latest_job=False):
+                         topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_computation=None):
     # compare baseline mean with jobs
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
     baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
     baseline_jobs_mean = baseline_jobs.mean(axis=1)
-    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, topic2_latest_job)
+
+    jobs = None
+    if topic2_computation is None:
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+    elif topic2_computation == 'latest':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, True)
+    elif topic2_computation == 'median':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = jobs.median(axis=1).to_frame()
+    elif topic2_computation == 'mean':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = jobs.mean(axis=1).to_frame()
 
     def delta_mean(lign):
         if lign.name not in baseline_jobs.index.values:
@@ -137,14 +148,27 @@ def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseli
 
 
 def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
-                           topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_latest_job=False):
+                           topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_computation=None):
     # compare baseline median with jobs
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
     baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
     print('shape baseline jobs: %s,%s' % baseline_jobs.shape)
     baseline_jobs_median = baseline_jobs.median(axis=1)
-    jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, topic2_latest_job)
+
+    jobs = None
+    if topic2_computation is None:
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+    elif topic2_computation == 'latest':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, True)
+    elif topic2_computation == 'median':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = jobs.median(axis=1).to_frame()
+    elif topic2_computation == 'mean':
+        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = jobs.mean(axis=1).to_frame()
+
     print('shape topic2 jobs: %s,%s' % jobs.shape)
+    print('topic2 jobs type %s' % str(type(jobs)))
 
     def delta_median(lign):
         if lign.name in baseline_jobs.index.values:
