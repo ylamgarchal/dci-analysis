@@ -126,7 +126,7 @@ def main():
         sync(args.team, args.topic, args.testname, args.working_dir)
     elif args.command == 'dashboard':
         analyzer.WORKING_DIR = args.working_dir
-        app.dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 80), debug=True)
+        app.dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 1234), debug=True)
     sys.exit(0)
 
 

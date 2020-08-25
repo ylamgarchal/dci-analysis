@@ -244,9 +244,9 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
         )
 
         data_table = []
-        job_id=compared_jobs.columns.to_list()[0]
+        job_id=compared_jobs.columns.tolist()[0]
         compared_jobs.sort_values(by=job_id, ascending=False, inplace=True)
-        testcases = compared_jobs.index.to_list()
+        testcases = compared_jobs.index.tolist()
         data = []
         for testcase in testcases:
             if compared_jobs.loc[testcase, job_id] >= 15:
@@ -348,4 +348,4 @@ def update_topic_timeframe(topic):
 
 
 if __name__ == '__main__':
-    dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 1080), debug=True)
+    dashboard.run_server(host=os.getenv('DCI_ANALYSIS_HOST', '0.0.0.0'), port=os.getenv('DCI_ANALYSIS_PORT', 1234), debug=True)

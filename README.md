@@ -43,7 +43,7 @@ Finally, run the dashboard.
 
 ## Dashboard
 
-To run the dashboard type the following:
+### run the dashboard
 
 ```console
 [yassine@Bouceka dci-analysis]$ export DCI_ANALYSIS_PORT=1234
@@ -61,3 +61,13 @@ Debugger PIN: 178-967-504
 ```
 
 Then fo to http://127.0.0.1:1234 to visit the dashboard page
+
+### run the dashboard with Podman:
+
+```console
+[yassine@Bouceka dci-analysis]$ sudo setenforce 0
+[yassine@Bouceka dci-analysis]$ podman build -t dci-analysis ./
+[yassine@Bouceka dci-analysis]$ podman run -p 1234:1234 -v /home/yassine/dci/dci-analysis:/opt/dci-analysis -it localhost/dci-analysis
+```
+
+With "/home/yassine/dci/dci-analysis" the directory with dci-analysis code.
