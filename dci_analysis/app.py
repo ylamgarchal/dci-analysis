@@ -6,6 +6,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 
 from dci_analysis import analyzer
+import numpy
 
 import glob
 import os
@@ -127,7 +128,14 @@ def display_page(pathname):
                 html.Br(),
                 html.Div(id='comparison'),
                 html.Br(),
+                html.H3('Comparison details'),
                 html.Div(id='comparison_details'),
+                html.Br(),
+                html.H3('Coefficient of variation topic 1'),
+                html.Div(id='coeff_var_1'),
+                html.Br(),
+                html.H3('Coefficient of variation topic 2'),
+                html.Div(id='coeff_var_2'),
                 html.Br(),
                 html.Div(id='trend')
             ])
@@ -140,6 +148,8 @@ def display_page(pathname):
 
 @dashboard.callback([dash.dependencies.Output('comparison', 'children'),
               dash.dependencies.Output('comparison_details', 'children'),
+              dash.dependencies.Output('coeff_var_1', 'children'),
+              dash.dependencies.Output('coeff_var_2', 'children'),
               dash.dependencies.Output('trend', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks'),
                dash.dependencies.Input('baseline_timeframe', 'start_date'),
@@ -158,8 +168,11 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
                 'Data table comparison details !',
+                'Coefficent of variation table 1 !',
+                'Coefficent of variation table 2 !',
                 'Trend of the view between topics !')
     else:
+        # Bar chart, histogram
         baseline_start_date = analyzer.string_to_date(baseline_start_date)
         baseline_end_date = analyzer.string_to_date(baseline_end_date) - timedelta(days=1)
         topic_start_date = analyzer.string_to_date(topic_start_date)
@@ -243,7 +256,10 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             }
         )
 
+        # Comparisons details data table
+        # show the delta of each test case in percentage
         data_table = []
+        # compared_jobs contains only one column
         job_id=compared_jobs.columns.tolist()[0]
         compared_jobs.sort_values(by=job_id, ascending=False, inplace=True)
         testcases = compared_jobs.index.tolist()
@@ -282,6 +298,38 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 baseline_tags,
                 topic2_tags)
 
+        # Coefficient of Variation data table
+        def get_coefficient_variation_table(topic_name, topic_start_date, topic_end_date, topic_tags):
+            jobs = analyzer.get_jobs_dataset(topic_name, topic_start_date, topic_end_date, topic_tags)
+            jobs_mean = jobs.apply(numpy.mean,axis=1)
+            jobs_std = jobs.apply(numpy.std, axis=1)
+            coeff_var = jobs_std / jobs_mean
+            coeff_var.sort_values(ascending=False, inplace=True)
+
+            data_table = []
+            testcases = coeff_var.index.tolist()
+            data = []
+            for testcase in testcases:
+                data.append({'testcase': testcase,
+                            'value': coeff_var[testcase]})
+            coefficient_variations_table = dash_table.DataTable(
+                id='table',
+                columns=[{"name": "testcase", "id": "testcase"},
+                        {"name": "value", "id": "value"}],
+                data=data,
+                page_current=0,
+                page_size=15
+            )
+
+            return coefficient_variations_table
+
+        coefficient_variations_table_1 = get_coefficient_variation_table(
+            baseline_topic, baseline_start_date, baseline_end_date, baseline_tags)
+
+        coefficient_variations_table_2 = get_coefficient_variation_table(
+            topic, topic_start_date, topic_end_date, topic2_tags)
+
+        # Trends graph
         trend_values = []
         for j in range(0, compared_jobs.shape[1]):
             job_column = []
@@ -313,7 +361,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             }
         )
 
-        return (comparisons, comparisons_details, trends)
+        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, trends)
 
 
 def get_min_max_date_from_topic(topic_name):
