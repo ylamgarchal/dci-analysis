@@ -2,6 +2,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -137,6 +139,8 @@ def display_page(pathname):
                 html.H3('Coefficient of variation topic 2'),
                 html.Div(id='coeff_var_2'),
                 html.Br(),
+                html.Div(id='graph_per_class'),
+                html.Br(),
                 html.Div(id='trend')
             ])
         ])
@@ -150,6 +154,7 @@ def display_page(pathname):
               dash.dependencies.Output('comparison_details', 'children'),
               dash.dependencies.Output('coeff_var_1', 'children'),
               dash.dependencies.Output('coeff_var_2', 'children'),
+              dash.dependencies.Output('graph_per_class', 'children'),
               dash.dependencies.Output('trend', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks'),
                dash.dependencies.Input('baseline_timeframe', 'start_date'),
@@ -170,6 +175,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 'Data table comparison details !',
                 'Coefficent of variation table 1 !',
                 'Coefficent of variation table 2 !',
+                'Graph per class',
                 'Trend of the view between topics !')
     else:
         # Bar chart, histogram
@@ -329,6 +335,32 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
         coefficient_variations_table_2 = get_coefficient_variation_table(
             topic, topic_start_date, topic_end_date, topic2_tags)
 
+        # graph per class
+        def getClass(testname):
+            return testname.split('/')[0]
+        jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic2_tags)
+        testnames = jobs.index.tolist()
+        classes = list(map(getClass, testnames))
+        jobs['class'] = classes
+        jobs_sum_per_class = jobs.groupby('class').sum()
+        #jobs_sum_per_class = jobs_sum_per_class.apply(numpy.log, axis=1)
+        jobs_columns = list(jobs_sum_per_class.columns)
+        jobs_index = list(jobs_sum_per_class.index)
+
+        nb_rows = len(jobs_index)
+
+        fig = make_subplots(
+            rows=nb_rows, cols=1,
+            subplot_titles=jobs_index)
+
+        for row, j_i in enumerate(jobs_index, 1):
+            j_c = list(range(len(jobs_columns)))
+            fig.append_trace(go.Scatter(x=j_c, text=jobs_columns, y=list(jobs_sum_per_class.loc[j_i]), name="lol"),
+                        row=row, col=1)
+
+        fig.update_layout(height=1200, showlegend=False)
+        graph_per_class = dcc.Graph(figure=fig)
+
         # Trends graph
         trend_values = []
         for j in range(0, compared_jobs.shape[1]):
@@ -345,9 +377,10 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                 'data': [
                     {
                         'type': 'line',
+                        'name': 'trend',
                         'x': list(compared_jobs.columns),
                         'y': trend_values
-                    },
+                    }
                 ],
                 'layout': {
                     'title': 'Evolution of the 95th tests, %s/%s vs %s' % (baseline_topic, baseline_computation, topic),
@@ -361,7 +394,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             }
         )
 
-        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, trends)
+        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, graph_per_class, trends)
 
 
 def get_min_max_date_from_topic(topic_name):
