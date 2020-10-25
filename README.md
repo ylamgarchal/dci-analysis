@@ -30,14 +30,23 @@ First, get your remoteci credentials from the DCI dashboard.
 [yassine@Bouceka dci-analysis]$ source ~/dci/my-remoteci.rc.sh
 ```
 
-Synchronize all the jobs from the server to your local storage.
+Synchronize all the jobs of a topic from the server to your local storage.
 
 ```console
-[yassine@Bouceka dci-analysis]$ dci-analysis --workding-dir=/tmp sync TEAM TOPIC Testname
+[yassine@Bouceka dci-analysis]$ dci-analysis --workding-dir=/tmp sync --topic=TOPIC TEAM Testname
 ```
 
 This command will create a TOPIC/ directory, in the 'working-dir' path, with all the Testname
 tests from the jobs that belongs to the team TEAM, in csv format.
+
+Synchronize all the jobs of a product from the server to your local storage.
+
+```console
+[yassine@Bouceka dci-analysis]$ dci-analysis --workding-dir=/tmp sync --product=PRODUCT TEAM Testname
+```
+
+This command will loop over each topic of the product to pull the jobs from.
+
 
 Finally, run the dashboard.
 

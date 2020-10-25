@@ -14,6 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import concurrent.futures
+
 from lxml import etree
 import json
 import logging
@@ -31,16 +33,6 @@ LOG.addHandler(streamhandler)
 LOG.setLevel(logging.DEBUG)
 
 HTTP_TIMEOUT = 600
-
-
-X86_REMOTECI = "9b6fb854-6735-4081-96bf-b1986cf6842c"
-PPC_REMOTECI = "207fe1af-7bb2-4204-952a-d340edf9acc1"
-
-REMOTECI_ID = X86_REMOTECI
-
-JOBS_SKIP_LIST = [
-    '6e29c5a2-a352-4ae9-9a9d-6478aea64c26',
-    'a3e50a9f-cb73-43da-923b-f5205ce0f5bf']
 
 
 def get_with_retry(dci_context, uri, timeout=5, nb_retry=5):
@@ -68,6 +60,28 @@ def get_team_id(dci_context, team_name):
     return res.json()['teams'][0]['id']
 
 
+def get_product_id(dci_context, product_name):
+    uri = '%s/products?where=name:%s' % (dci_context.dci_cs_api, product_name)
+    res = get_with_retry(dci_context, uri)
+    if res.status_code != 200 or len(res.json()['products']) == 0:
+        LOG.error('product %s: status: %s, message: %s' % (product_name,
+                                                           res.status_code,
+                                                           res.text))
+    if len(res.json()['products']) == 0:
+        LOG.exception('product %s not found' % product_name)
+    return res.json()['products'][0]['id']
+
+
+def get_topics_of_product(dci_context, product_id):
+    uri = '%s/products/%s?embed=topics' % (dci_context.dci_cs_api, product_id)
+    res = get_with_retry(dci_context, uri)
+    if res.status_code != 200:
+        LOG.error('product %s: status: %s, message: %s' % (product_id,
+                                                           res.status_code,
+                                                           res.text))
+    return res.json()['product']['topics']
+
+
 def get_topic_id(dci_context, topic_name):
     uri = '%s/topics?where=name:%s' % (dci_context.dci_cs_api, topic_name)
     res = get_with_retry(dci_context, uri)
@@ -77,6 +91,7 @@ def get_topic_id(dci_context, topic_name):
                                                          res.text))
     if len(res.json()['topics']) == 0:
         LOG.exception('topic %s not found' % topic_name)
+        sys.exit(1)
     return res.json()['topics'][0]['id']
 
 
@@ -142,40 +157,19 @@ def get_junit_of_file(dci_context, file_id):
     return res.text
 
 
-
-def sync(dci_context, team_name, topic_name, test_name, working_dir):
-
-    team_id = get_team_id(dci_context, team_name)
-    LOG.info('%s team id %s' % (team_name, team_id))
-    topic_id = get_topic_id(dci_context, topic_name)
-    LOG.info('%s topic id %s' % (topic_name, topic_id))
-    LOG.info('getting jobs...')
-    jobs = get_jobs(dci_context, team_id, topic_id)
+def handle_job(dci_context, job, working_dir, topic_name, topic_name_component, test_name):
     jobs_tags = {}
-
-    if topic_name == 'RHEL-8' or topic_name == "RHEL-8-nightly":
-        topic_name = 'RHEL-8.3'
-    if topic_name == 'RHEL-7' or topic_name == "RHEL-7-nightly":
-        topic_name = 'RHEL-7.9'
-    topic_name_component = topic_name
-    if 'milestone' in topic_name_component:
-        topic_name_component = topic_name_component.replace('-milestone', '')
-    LOG.info('convert jobs %s tests to csv files...' % test_name)
-    for job in jobs:
-        if job['id'] in JOBS_SKIP_LIST:
-            continue
-        topic_name_in_component = False
-        for component in job['components']:
-            if topic_name_component.lower() in component['name'].lower():
-                topic_name_in_component = True
+    topic_name_in_component = False
+    for component in job['components']:
+        if topic_name_component.lower() in component['name'].lower():
+            topic_name_in_component = True
         if not topic_name_in_component:
-            continue
-        if job['remoteci_id'] != REMOTECI_ID:
             continue
         test_path = get_test_path(working_dir, topic_name, job, test_name)  # noqa
         if os.path.exists(test_path):
             LOG.debug('%s test of job %s already exist' % (test_name, job['id']))  # noqa
             continue
+    
         files = get_files_of_job(dci_context, job['id'])
         for file in files:
             if file['name'] == test_name:
@@ -187,6 +181,43 @@ def sync(dci_context, team_name, topic_name, test_name, working_dir):
                     write_test_csv(job['id'], test_path, test_dict)
                     base_test_path = os.path.basename(test_path)
                     jobs_tags[base_test_path] = job['tags']
-        
+                else:
+                    LOG.warn('job %s tests contains less than 697 tests' % job['id'])
+        return jobs_tags
+
+
+def sync(dci_context, team_name, topic_name, test_name, working_dir):
+
+    team_id = get_team_id(dci_context, team_name)
+    LOG.info('%s team id %s' % (team_name, team_id))
+    topic_id = get_topic_id(dci_context, topic_name)
+    LOG.info('%s topic id %s' % (topic_name, topic_id))
+    LOG.info('getting jobs...')
+    jobs = get_jobs(dci_context, team_id, topic_id)
+    jobs_tags = {}
+
+    topic_name_component = topic_name
+    if '-milestone' in topic_name_component:
+        topic_name_component = topic_name_component.replace('-milestone', '')
+    LOG.info('convert jobs %s tests to csv files...' % test_name)
+
+    futures = []
+    pool = concurrent.futures.ProcessPoolExecutor()
+    for job in jobs:
+        future = pool.submit(handle_job, dci_context, job, working_dir, topic_name, topic_name_component, test_name)
+        futures.append(future)
+    
+    for future in concurrent.futures.as_completed(futures):
+        if isinstance(future.result(), dict):
+            jobs_tags.update(future.result())
+    
+    file_jobs_tags = {}
+    jobs_tags_file_path = '%s/%s/index_tags.json' % (working_dir, topic_name)
+    if os.path.exists(jobs_tags_file_path):
+        file_jobs_tags = open(jobs_tags_file_path, 'r').read()
+        file_jobs_tags = json.loads(file_jobs_tags)
+    file_jobs_tags.update(jobs_tags)
+
+
     with open('%s/%s/index_tags.json' % (working_dir, topic_name), 'w') as f:
-        f.write(json.dumps(jobs_tags))
+        f.write(json.dumps(file_jobs_tags))

@@ -42,50 +42,9 @@ def display_page(pathname):
         return html.Div(id='container_3', children=[
             html.Div(id='container_4', children=[
                 html.Div(id='container_41', children=[
-                    html.Label('Baseline Topic'),
+                    html.Label('Topic 1'),
                     dcc.Dropdown(
-                        id='dropdown_topic_baseline',
-                        options=[
-                            {'label': 'RHEL-7.6-milestone', 'value': 'RHEL-7.6-milestone'},
-                            {'label': 'RHEL-7.7-milestone', 'value': 'RHEL-7.7-milestone'},
-                            {'label': 'RHEL-7.8-milestone', 'value': 'RHEL-7.8-milestone'},
-                            {'label': 'RHEL-7.9-milestone', 'value': 'RHEL-7.9-milestone'},
-                            {'label': 'RHEL-7.6', 'value': 'RHEL-7.6'},
-                            {'label': 'RHEL-7.7', 'value': 'RHEL-7.7'},
-                            {'label': 'RHEL-7.8', 'value': 'RHEL-7.8'},
-                            {'label': 'RHEL-8.0', 'value': 'RHEL-8.0'},
-                            {'label': 'RHEL-8.1', 'value': 'RHEL-8.1'},
-                            {'label': 'RHEL-8.2', 'value': 'RHEL-8.2'},
-                            {'label': 'RHEL-8.3', 'value': 'RHEL-8.3'},
-                            {'label': 'RHEL-8.4', 'value': 'RHEL-8.4'},
-                            {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
-                            {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
-                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
-                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
-                        ],
-                        value='RHEL-8.1'
-                   ),
-                   html.Br(),
-                   html.Label('Tags'),
-                   dcc.Input(id='baseline_tags'),
-                   html.Br(),
-                   html.Div(
-                       dcc.DatePickerRange(
-                           id='baseline_timeframe'
-                       )),
-                   html.Br(),
-                   dcc.RadioItems(
-                       id='baseline_computation',
-                       options=[{'label': 'Mean', 'value': 'mean'},
-                                {'label': 'Median', 'value': 'median'}],
-                       value='median'
-                   ),
-                ]),
-                html.Div(id='container_42'),
-                html.Div(id='container_43', children=[
-                    html.Label('Topic'),
-                    dcc.Dropdown(
-                        id='topic',
+                        id='dropdown_topic_1',
                         options=[
                             {'label': 'RHEL-7.6-milestone', 'value': 'RHEL-7.6-milestone'},
                             {'label': 'RHEL-7.7-milestone', 'value': 'RHEL-7.7-milestone'},
@@ -108,15 +67,58 @@ def display_page(pathname):
                    ),
                    html.Br(),
                    html.Label('Tags'),
-                   dcc.Input(id='topic2_tags'),
+                   dcc.Input(id='topic_1_tags',
+                             value='x86_64'),
                    html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
-                           id='topic_timeframe'
+                           id='topic_1_timeframe'
                        )),
                    html.Br(),
                    dcc.RadioItems(
-                       id='topic_computation',
+                       id='topic_1_computation',
+                       options=[{'label': 'Mean', 'value': 'mean'},
+                                {'label': 'Median', 'value': 'median'}],
+                       value='median'
+                   ),
+                ]),
+                html.Div(id='container_42'),
+                html.Div(id='container_43', children=[
+                    html.Label('Topic 2'),
+                    dcc.Dropdown(
+                        id='dropdown_topic_2',
+                        options=[
+                            {'label': 'RHEL-7.6-milestone', 'value': 'RHEL-7.6-milestone'},
+                            {'label': 'RHEL-7.7-milestone', 'value': 'RHEL-7.7-milestone'},
+                            {'label': 'RHEL-7.8-milestone', 'value': 'RHEL-7.8-milestone'},
+                            {'label': 'RHEL-7.9-milestone', 'value': 'RHEL-7.9-milestone'},
+                            {'label': 'RHEL-7.6', 'value': 'RHEL-7.6'},
+                            {'label': 'RHEL-7.7', 'value': 'RHEL-7.7'},
+                            {'label': 'RHEL-7.8', 'value': 'RHEL-7.8'},
+                            {'label': 'RHEL-8.0', 'value': 'RHEL-8.0'},
+                            {'label': 'RHEL-8.1', 'value': 'RHEL-8.1'},
+                            {'label': 'RHEL-8.2', 'value': 'RHEL-8.2'},
+                            {'label': 'RHEL-8.3', 'value': 'RHEL-8.3'},
+                            {'label': 'RHEL-8.4', 'value': 'RHEL-8.4'},
+                            {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
+                            {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
+                            {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
+                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
+                        ],
+                        value='RHEL-8.3-milestone'
+                   ),
+                   html.Br(),
+                   html.Label('Tags'),
+                   dcc.Input(id='topic_2_tags',
+                             value='x86_64'),
+                   html.Br(),
+                   html.Div(
+                       dcc.DatePickerRange(
+                           id='topic_2_timeframe'
+                       )),
+                   html.Br(),
+                   dcc.RadioItems(
+                       id='topic_2_computation',
                        options=[{'label': 'Mean', 'value': 'mean'},
                                 {'label': 'Median', 'value': 'median'},
                                 {'label': 'Latest', 'value': 'latest'}],
@@ -139,9 +141,13 @@ def display_page(pathname):
                 html.H3('Coefficient of variation topic 2'),
                 html.Div(id='coeff_var_2'),
                 html.Br(),
-                html.Div(id='graph_per_class'),
+                html.Div(id='trend'),
                 html.Br(),
-                html.Div(id='trend')
+                html.H3('Topic 1/Sum graph per class'),
+                html.Div(id='graph_per_class_1'),
+                html.Br(),
+                html.H3('Topic 2/Sum graph per class'),
+                html.Div(id='graph_per_class_2')
             ])
         ])
     else:
@@ -154,62 +160,64 @@ def display_page(pathname):
               dash.dependencies.Output('comparison_details', 'children'),
               dash.dependencies.Output('coeff_var_1', 'children'),
               dash.dependencies.Output('coeff_var_2', 'children'),
-              dash.dependencies.Output('graph_per_class', 'children'),
+              dash.dependencies.Output('graph_per_class_1', 'children'),
+              dash.dependencies.Output('graph_per_class_2', 'children'),
               dash.dependencies.Output('trend', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks'),
-               dash.dependencies.Input('baseline_timeframe', 'start_date'),
-               dash.dependencies.Input('baseline_timeframe', 'end_date'),
-               dash.dependencies.Input('topic_timeframe', 'start_date'),
-               dash.dependencies.Input('topic_timeframe', 'end_date'),
-               dash.dependencies.Input('baseline_tags', 'value'),
-               dash.dependencies.Input('topic2_tags', 'value')],
-              [dash.dependencies.State('dropdown_topic_baseline', 'value'),
-               dash.dependencies.State('baseline_computation', 'value'),
-               dash.dependencies.State('topic', 'value'),
-               dash.dependencies.State('topic_computation', 'value')])
-def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_date,
-                  topic_end_date, baseline_tags, topic2_tags, baseline_topic,
-                  baseline_computation, topic, topic_computation):
+               dash.dependencies.Input('topic_1_timeframe', 'start_date'),
+               dash.dependencies.Input('topic_1_timeframe', 'end_date'),
+               dash.dependencies.Input('topic_2_timeframe', 'start_date'),
+               dash.dependencies.Input('topic_2_timeframe', 'end_date'),
+               dash.dependencies.Input('topic_1_tags', 'value'),
+               dash.dependencies.Input('topic_2_tags', 'value')],
+              [dash.dependencies.State('dropdown_topic_1', 'value'),
+               dash.dependencies.State('topic_1_computation', 'value'),
+               dash.dependencies.State('dropdown_topic_2', 'value'),
+               dash.dependencies.State('topic_2_computation', 'value')])
+def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_date,
+                  topic_2_end_date, topic_1_tags, topic_2_tags, topic_1,
+                  topic_1_computation, topic_2, topic_2_computation):
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
                 'Data table comparison details !',
                 'Coefficent of variation table 1 !',
                 'Coefficent of variation table 2 !',
-                'Graph per class',
+                'Topic 1 / Sum Graph per class',
+                'Topic 2 / Sum Graph per class',
                 'Trend of the view between topics !')
     else:
         # Bar chart, histogram
-        baseline_start_date = analyzer.string_to_date(baseline_start_date)
-        baseline_end_date = analyzer.string_to_date(baseline_end_date) - timedelta(days=1)
-        topic_start_date = analyzer.string_to_date(topic_start_date)
-        topic_end_date = analyzer.string_to_date(topic_end_date) - timedelta(days=1)
-        if baseline_tags:
-            baseline_tags = baseline_tags.split(',')
-        if topic2_tags:
-            topic2_tags = topic2_tags.split(',')
+        topic_1_start_date = analyzer.string_to_date(topic_1_start_date)
+        topic_1_end_date = analyzer.string_to_date(topic_1_end_date) - timedelta(days=1)
+        topic_2_start_date = analyzer.string_to_date(topic_2_start_date)
+        topic_2_end_date = analyzer.string_to_date(topic_2_end_date) - timedelta(days=1)
+        if topic_1_tags:
+            topic_1_tags = topic_1_tags.split(',')
+        if topic_2_tags:
+            topic_2_tags = topic_2_tags.split(',')
 
-        if baseline_computation == 'median':
+        if topic_1_computation == 'median':
             compared_jobs = analyzer.comparison_with_median(
-                baseline_topic,
-                topic,
-                baseline_start_date,
-                baseline_end_date,
-                topic_start_date,
-                topic_end_date,
-                baseline_tags,
-                topic2_tags,
-                topic_computation)
+                topic_1,
+                topic_2,
+                topic_1_start_date,
+                topic_1_end_date,
+                topic_2_start_date,
+                topic_2_end_date,
+                topic_1_tags,
+                topic_2_tags,
+                topic_2_computation)
         else:
             compared_jobs = analyzer.comparison_with_mean(
-                baseline_topic,
-                topic,
-                baseline_start_date,
-                baseline_end_date,
-                topic_start_date,
-                topic_end_date,
-                baseline_tags,
-                topic2_tags,
-                topic_computation)
+                topic_1,
+                topic_2,
+                topic_1_start_date,
+                topic_1_end_date,
+                topic_2_start_date,
+                topic_2_end_date,
+                topic_1_tags,
+                topic_2_tags,
+                topic_2_computation)
         
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
@@ -251,7 +259,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                     },
                 ],
                 'layout': {
-                    'title': 'Baseline %s/%s vs %s/%s' % (baseline_topic, baseline_computation, topic, topic_computation),
+                    'title': 'Baseline %s/%s vs %s/%s' % (topic_1, topic_1_computation, topic_2, topic_2_computation),
                     'xaxis':{
                         'title':'Intervals of deltas (percentage), lower is better'
                     },
@@ -283,30 +291,30 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             page_size=15
         )
 
-        if baseline_computation == 'median':
+        if topic_1_computation == 'median':
             compared_jobs = analyzer.comparison_with_median(
-                baseline_topic,
-                topic,
-                baseline_start_date,
-                baseline_end_date,
-                topic_start_date,
-                topic_end_date,
-                baseline_tags,
-                topic2_tags)
+                topic_1,
+                topic_2,
+                topic_1_start_date,
+                topic_1_end_date,
+                topic_2_start_date,
+                topic_2_end_date,
+                topic_1_tags,
+                topic_2_tags)
         else:
             compared_jobs = analyzer.comparison_with_mean(
-                baseline_topic,
-                topic,
-                baseline_start_date,
-                baseline_end_date,
-                topic_start_date,
-                topic_end_date,
-                baseline_tags,
-                topic2_tags)
+                topic_1,
+                topic_2,
+                topic_1_start_date,
+                topic_1_end_date,
+                topic_2_start_date,
+                topic_2_end_date,
+                topic_1_tags,
+                topic_2_tags)
 
         # Coefficient of Variation data table
-        def get_coefficient_variation_table(topic_name, topic_start_date, topic_end_date, topic_tags):
-            jobs = analyzer.get_jobs_dataset(topic_name, topic_start_date, topic_end_date, topic_tags)
+        def get_coefficient_variation_table(topic_name, topic_2_start_date, topic_2_end_date, topic_tags):
+            jobs = analyzer.get_jobs_dataset(topic_name, topic_2_start_date, topic_2_end_date, topic_tags)
             jobs_mean = jobs.apply(numpy.mean,axis=1)
             jobs_std = jobs.apply(numpy.std, axis=1)
             coeff_var = jobs_std / jobs_mean
@@ -330,36 +338,39 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             return coefficient_variations_table
 
         coefficient_variations_table_1 = get_coefficient_variation_table(
-            baseline_topic, baseline_start_date, baseline_end_date, baseline_tags)
+            topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
 
         coefficient_variations_table_2 = get_coefficient_variation_table(
-            topic, topic_start_date, topic_end_date, topic2_tags)
+            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
 
         # graph per class
-        def getClass(testname):
-            return testname.split('/')[0]
-        jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic2_tags)
-        testnames = jobs.index.tolist()
-        classes = list(map(getClass, testnames))
-        jobs['class'] = classes
-        jobs_sum_per_class = jobs.groupby('class').sum()
-        #jobs_sum_per_class = jobs_sum_per_class.apply(numpy.log, axis=1)
-        jobs_columns = list(jobs_sum_per_class.columns)
-        jobs_index = list(jobs_sum_per_class.index)
+        def graph_per_class(topic, topic_start_date, topic_end_date, topic_tags):
+            def getClass(testname):
+                return testname.split('/')[0]
+            jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic_tags)
+            testnames = jobs.index.tolist()
+            classes = list(map(getClass, testnames))
+            jobs['class'] = classes
+            jobs_sum_per_class = jobs.groupby('class').sum()
+            jobs_columns = list(jobs_sum_per_class.columns)
+            jobs_index = list(jobs_sum_per_class.index)
 
-        nb_rows = len(jobs_index)
+            nb_rows = len(jobs_index)
 
-        fig = make_subplots(
-            rows=nb_rows, cols=1,
-            subplot_titles=jobs_index)
+            fig = make_subplots(
+                rows=nb_rows, cols=1,
+                subplot_titles=jobs_index)
 
-        for row, j_i in enumerate(jobs_index, 1):
-            j_c = list(range(len(jobs_columns)))
-            fig.append_trace(go.Scatter(x=j_c, text=jobs_columns, y=list(jobs_sum_per_class.loc[j_i]), name="lol"),
-                        row=row, col=1)
+            for row, j_i in enumerate(jobs_index, 1):
+                j_c = list(range(len(jobs_columns)))
+                fig.append_trace(go.Scatter(x=j_c, text=jobs_columns, y=list(jobs_sum_per_class.loc[j_i]), name="lol"),
+                            row=row, col=1)
 
-        fig.update_layout(height=1200, showlegend=False)
-        graph_per_class = dcc.Graph(figure=fig)
+            fig.update_layout(height=1200, showlegend=False)
+            return dcc.Graph(figure=fig)
+        
+        graph_per_class_topic_1 = graph_per_class(topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
+        graph_per_class_topic_2 = graph_per_class(topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
 
         # Trends graph
         trend_values = []
@@ -383,9 +394,9 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
                     }
                 ],
                 'layout': {
-                    'title': 'Evolution of the 95th tests, %s/%s vs %s' % (baseline_topic, baseline_computation, topic),
+                    'title': 'Evolution of the 95th tests, %s/%s vs %s/%s' % (topic_1, topic_1_computation, topic_2, topic_2_computation),
                     'xaxis':{
-                        'title':'%s/Jobs' % baseline_computation
+                        'title':'%s/Jobs' % topic_1_computation
                     },
                     'yaxis':{
                         'title':'Maximum evolution of 95% tests'
@@ -394,7 +405,7 @@ def update_output(n_clicks, baseline_start_date, baseline_end_date, topic_start_
             }
         )
 
-        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, graph_per_class, trends)
+        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, graph_per_class_topic_1, graph_per_class_topic_2, trends)
 
 
 def get_min_max_date_from_topic(topic_name):
@@ -410,22 +421,22 @@ def get_min_max_date_from_topic(topic_name):
         return None, None, None, None
 
 
-@dashboard.callback([dash.dependencies.Output('baseline_timeframe', 'min_date_allowed'),
-                     dash.dependencies.Output('baseline_timeframe', 'start_date'),
-                     dash.dependencies.Output('baseline_timeframe', 'max_date_allowed'),
-                     dash.dependencies.Output('baseline_timeframe', 'end_date')],
-                    [dash.dependencies.Input('dropdown_topic_baseline', 'value')])
-def update_baseline_timeframe(baseline_topic):
-    return get_min_max_date_from_topic(baseline_topic)
+@dashboard.callback([dash.dependencies.Output('topic_1_timeframe', 'min_date_allowed'),
+                     dash.dependencies.Output('topic_1_timeframe', 'start_date'),
+                     dash.dependencies.Output('topic_1_timeframe', 'max_date_allowed'),
+                     dash.dependencies.Output('topic_1_timeframe', 'end_date')],
+                    [dash.dependencies.Input('dropdown_topic_1', 'value')])
+def update_topic_1_timeframe(topic_1):
+    return get_min_max_date_from_topic(topic_1)
 
 
-@dashboard.callback([dash.dependencies.Output('topic_timeframe', 'min_date_allowed'),
-                     dash.dependencies.Output('topic_timeframe', 'start_date'),
-                     dash.dependencies.Output('topic_timeframe', 'max_date_allowed'),
-                     dash.dependencies.Output('topic_timeframe', 'end_date')],
-                    [dash.dependencies.Input('topic', 'value')])
-def update_topic_timeframe(topic):
-    return get_min_max_date_from_topic(topic)
+@dashboard.callback([dash.dependencies.Output('topic_2_timeframe', 'min_date_allowed'),
+                     dash.dependencies.Output('topic_2_timeframe', 'start_date'),
+                     dash.dependencies.Output('topic_2_timeframe', 'max_date_allowed'),
+                     dash.dependencies.Output('topic_2_timeframe', 'end_date')],
+                    [dash.dependencies.Input('dropdown_topic_2', 'value')])
+def update_topic_2_timeframe(topic_2):
+    return get_min_max_date_from_topic(topic_2)
 
 
 if __name__ == '__main__':

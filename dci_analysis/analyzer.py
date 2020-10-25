@@ -100,127 +100,60 @@ def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False):
     return jobs_dataset
 
 
-def write_series_csv(file_path, series, header):
-    with open(file_path, 'w') as f:
-        f.write('%s/%s\n' % (WORKING_DIR, header))
-        for tc, time in series.items():
-            f.write('%s,%s\n' % (tc, time))
-
-
-def comparison_with_mean(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
-                         topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_computation=None):
-    # compare baseline mean with jobs
+def comparison_with_mean(topic_name_1, topic_name_2, topic_1_start_date, topic_1_end_date,
+                         topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None):
+    # compare against topic_1's mean
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
-    baseline_jobs_mean = baseline_jobs.mean(axis=1)
+    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
+    topic_1_jobs_mean = topic_1_jobs.mean(axis=1)
 
     jobs = None
     if topic2_computation is None:
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
     elif topic2_computation == 'latest':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, True)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True)
     elif topic2_computation == 'median':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
         jobs = jobs.median(axis=1).to_frame()
     elif topic2_computation == 'mean':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
         jobs = jobs.mean(axis=1).to_frame()
 
     def delta_mean(lign):
-        if lign.name not in baseline_jobs.index.values:
+        if lign.name not in topic_1_jobs.index.values:
             return "N/A"
-        diff = lign - baseline_jobs_mean[lign.name]
-        return (diff * 100.0) / baseline_jobs_mean[lign.name]
+        diff = lign - topic_1_jobs_mean[lign.name]
+        return (diff * 100.0) / topic_1_jobs_mean[lign.name]
 
-    compared_jobs = jobs.apply(delta_mean, axis=1)
-    csv_file_path = '%s/csv/%s_mean_vs_%s.csv' % (WORKING_DIR, topic_name_1, topic_name_2)
-    LOG.info('write file to %s' % csv_file_path)
-    compared_jobs.to_csv(csv_file_path, sep=',')
-
-    html_file_path = '%s/html/%s_mean_vs_%s.html' % (WORKING_DIR, topic_name_1, topic_name_2)
-    with open(html_file_path, 'w') as f:
-        LOG.info('write file to %s' % html_file_path)
-        if isinstance(compared_jobs, pd.Series):
-            compared_jobs.to_frame().to_html(f, justify='left')
-        else:
-            compared_jobs.to_html(f, justify='left')
-    return compared_jobs
+    return jobs.apply(delta_mean, axis=1)
 
 
-def comparison_with_median(topic_name_1, topic_name_2, baseline_start_date, baseline_end_date,
-                           topic_start_date, topic_end_date, baseline_tags, topic2_tags, topic2_computation=None):
-    # compare baseline median with jobs
+def comparison_with_median(topic_name_1, topic_name_2, topic_1_start_date, topic_1_end_date,
+                           topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None):
+    # compare against topic_1's median
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    baseline_jobs = get_jobs_dataset(topic_name_1, baseline_start_date, baseline_end_date, baseline_tags)
-    print('shape baseline jobs: %s,%s' % baseline_jobs.shape)
-    baseline_jobs_median = baseline_jobs.median(axis=1)
+    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
+    print('shape baseline jobs: %s,%s' % topic_1_jobs.shape)
+    topic_1_jobs_median = topic_1_jobs.median(axis=1)
 
     jobs = None
     if topic2_computation is None:
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
     elif topic2_computation == 'latest':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, True)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True)
     elif topic2_computation == 'median':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
         jobs = jobs.median(axis=1).to_frame()
     elif topic2_computation == 'mean':
-        jobs = get_jobs_dataset(topic_name_2, topic_start_date, topic_end_date, topic2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
         jobs = jobs.mean(axis=1).to_frame()
 
-    print('shape topic2 jobs: %s,%s' % jobs.shape)
-    print('topic2 jobs type %s' % str(type(jobs)))
+    print('shape topic_2 jobs: %s,%s' % jobs.shape)
+    print('topic_2 jobs type %s' % str(type(jobs)))
 
     def delta_median(lign):
-        if lign.name in baseline_jobs.index.values:
-            diff = lign - baseline_jobs_median[lign.name]
-            return (diff * 100.0) / baseline_jobs_median[lign.name]
+        if lign.name in topic_1_jobs.index.values:
+            diff = lign - topic_1_jobs_median[lign.name]
+            return (diff * 100.0) / topic_1_jobs_median[lign.name]
 
-    compared_jobs = jobs.apply(delta_median, axis=1)
-    csv_file_path = '%s/csv/%s_median_vs_%s.csv' % (WORKING_DIR, topic_name_1, topic_name_2)
-    try:
-        os.mkdir('%s/csv' % (WORKING_DIR))
-    except:
-        pass
-    LOG.info('write file to %s' % csv_file_path)
-    compared_jobs.to_csv(csv_file_path, sep=',')
-
-    html_file_path = '%s/html/%s_median_vs_%s.html' % (WORKING_DIR, topic_name_1, topic_name_2)
-    try:
-        os.mkdir('%s/html' % (WORKING_DIR))
-    except:
-        pass
-    with open(html_file_path, 'w') as f:
-        LOG.info('write file to %s' % html_file_path)
-        if isinstance(compared_jobs, pd.Series):
-            compared_jobs.to_frame().to_html(f, justify='left')
-        else:
-            compared_jobs.to_html(f, justify='left')
-    return compared_jobs
-
-
-def analyze(topic_name_1, topic_name_2):
-    # compute standard deviation
-    for topic_name in (topic_name_1, topic_name_2):
-        jobs_dataset = get_jobs_dataset(topic_name)
-        # write the evolution
-        csv_file_path = '%s/csv/%s_evolution.csv' % (WORKING_DIR, topic_name)
-        LOG.info('write file to %s' % csv_file_path)
-        jobs_dataset.to_csv(csv_file_path, sep=',')
-        html_file_path = '%s/html/%s_evolution.html' % (WORKING_DIR, topic_name)
-        with open(html_file_path, 'w') as f:
-            LOG.info('write file to %s' % html_file_path)
-            jobs_dataset.to_html(f, justify='left')
-        # write the standart deviation
-        LOG.info('compute standard deviation of %s' % topic_name)
-        jobs_std = jobs_dataset.apply(numpy.std, axis=1)
-        jobs_std.sort_values(ascending=False, inplace=True)
-        csv_file_path = '%s/csv/%s_standard_deviation.csv' % (WORKING_DIR, topic_name)
-        LOG.info('write file to %s' % csv_file_path)
-        write_series_csv(csv_file_path, jobs_std, 'testname, time')
-        html_file_path = '%s/html/%s_standard_deviation.html' % (WORKING_DIR, topic_name)
-        with open(html_file_path, 'w') as f:
-            LOG.info('write file to %s' % html_file_path)
-            jobs_std.to_frame().to_html(f, justify='left')
-
-    comparison_with_mean(topic_name_1, topic_name_2)
-    comparison_with_median(topic_name_1, topic_name_2)
+    return jobs.apply(delta_median, axis=1)
