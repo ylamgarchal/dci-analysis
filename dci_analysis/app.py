@@ -81,6 +81,11 @@ def display_page(pathname):
                                 {'label': 'Median', 'value': 'median'}],
                        value='median'
                    ),
+                   html.Br(),
+                   html.Label('Evolution percentage'),
+                   dcc.Input(id='evolution_percentage_value',
+                             value='95'),
+                   html.Br(),
                 ]),
                 html.Div(id='container_42'),
                 html.Div(id='container_43', children=[
@@ -169,13 +174,14 @@ def display_page(pathname):
                dash.dependencies.Input('topic_2_timeframe', 'start_date'),
                dash.dependencies.Input('topic_2_timeframe', 'end_date'),
                dash.dependencies.Input('topic_1_tags', 'value'),
-               dash.dependencies.Input('topic_2_tags', 'value')],
+               dash.dependencies.Input('topic_2_tags', 'value'),
+               dash.dependencies.Input('evolution_percentage_value', 'value')],
               [dash.dependencies.State('dropdown_topic_1', 'value'),
                dash.dependencies.State('topic_1_computation', 'value'),
                dash.dependencies.State('dropdown_topic_2', 'value'),
                dash.dependencies.State('topic_2_computation', 'value')])
 def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_date,
-                  topic_2_end_date, topic_1_tags, topic_2_tags, topic_1,
+                  topic_2_end_date, topic_1_tags, topic_2_tags, evolution_percentage_value, topic_1,
                   topic_1_computation, topic_2, topic_2_computation):
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
@@ -373,6 +379,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         graph_per_class_topic_2 = graph_per_class(topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
 
         # Trends graph
+        evolution_percentage_value
+        float_evolution_percentage_value = float(evolution_percentage_value) / 100.
         trend_values = []
         for j in range(0, compared_jobs.shape[1]):
             job_column = []
@@ -380,8 +388,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 value = compared_jobs.iloc[i,j]
                 job_column.append(value)
             job_column.sort()
-            index_95th = int(len(job_column) * 0.95)
-            trend_values.append(job_column[index_95th])
+            index_percentage = int(len(job_column) * float_evolution_percentage_value)
+            trend_values.append(job_column[index_percentage])
 
         trends = dcc.Graph(
             figure={
@@ -394,7 +402,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                     }
                 ],
                 'layout': {
-                    'title': 'Evolution of the 95th tests, %s/%s vs %s/%s' % (topic_1, topic_1_computation, topic_2, topic_2_computation),
+                    'title': 'Evolution of the %sth tests, %s/%s vs %s/%s' % (evolution_percentage_value, topic_1, topic_1_computation, topic_2, topic_2_computation),
                     'xaxis':{
                         'title':'%s/Jobs' % topic_1_computation
                     },
