@@ -68,7 +68,8 @@ def display_page(pathname):
                    html.Br(),
                    html.Label('Tags'),
                    dcc.Input(id='topic_1_tags',
-                             value='x86_64'),
+                             value='x86_64',
+                             debounce=True),
                    html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
@@ -84,7 +85,13 @@ def display_page(pathname):
                    html.Br(),
                    html.Label('Evolution percentage'),
                    dcc.Input(id='evolution_percentage_value',
-                             value='95'),
+                             value='95',
+                             debounce=True),
+                   html.Br(),
+                   html.Label('CoV filtering percentage'),
+                   dcc.Input(id='cov_filtration',
+                             value='0.05',
+                             debounce=True),
                    html.Br(),
                 ]),
                 html.Div(id='container_42'),
@@ -115,7 +122,8 @@ def display_page(pathname):
                    html.Br(),
                    html.Label('Tags'),
                    dcc.Input(id='topic_2_tags',
-                             value='x86_64'),
+                             value='x86_64',
+                             debounce=True),
                    html.Br(),
                    html.Div(
                        dcc.DatePickerRange(
@@ -175,14 +183,15 @@ def display_page(pathname):
                dash.dependencies.Input('topic_2_timeframe', 'end_date'),
                dash.dependencies.Input('topic_1_tags', 'value'),
                dash.dependencies.Input('topic_2_tags', 'value'),
-               dash.dependencies.Input('evolution_percentage_value', 'value')],
+               dash.dependencies.Input('evolution_percentage_value', 'value'),
+               dash.dependencies.Input('cov_filtration', 'value')],
               [dash.dependencies.State('dropdown_topic_1', 'value'),
                dash.dependencies.State('topic_1_computation', 'value'),
                dash.dependencies.State('dropdown_topic_2', 'value'),
                dash.dependencies.State('topic_2_computation', 'value')])
 def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_date,
-                  topic_2_end_date, topic_1_tags, topic_2_tags, evolution_percentage_value, topic_1,
-                  topic_1_computation, topic_2, topic_2_computation):
+                  topic_2_end_date, topic_1_tags, topic_2_tags, evolution_percentage_value,
+                  cov_filtration, topic_1, topic_1_computation, topic_2, topic_2_computation):
     if n_clicks == 0:
         return ('Compute the overview comparison between topics !',
                 'Data table comparison details !',
@@ -192,16 +201,79 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 'Topic 2 / Sum Graph per class',
                 'Trend of the view between topics !')
     else:
-        # Bar chart, histogram
+
+        cov_filtration = float(cov_filtration)
         topic_1_start_date = analyzer.string_to_date(topic_1_start_date)
         topic_1_end_date = analyzer.string_to_date(topic_1_end_date) - timedelta(days=1)
         topic_2_start_date = analyzer.string_to_date(topic_2_start_date)
         topic_2_end_date = analyzer.string_to_date(topic_2_end_date) - timedelta(days=1)
+
         if topic_1_tags:
             topic_1_tags = topic_1_tags.split(',')
         if topic_2_tags:
             topic_2_tags = topic_2_tags.split(',')
 
+        def _filter_tests_by_cov(tests, threshold):
+            filtered_tests = set()
+            for test in tests:
+                if test['value'] > threshold:
+                    filtered_tests.add(test['testcase'])
+            return filtered_tests
+
+        # Coefficient of Variation data table
+        def get_coefficient_variation_table(topic_name, topic_2_start_date, topic_2_end_date, topic_tags, threshold=None):
+            jobs = analyzer.get_jobs_dataset(topic_name, topic_2_start_date, topic_2_end_date, topic_tags)
+            jobs_mean = jobs.apply(numpy.mean,axis=1)
+            jobs_std = jobs.apply(numpy.std, axis=1)
+            coeff_var = jobs_std / jobs_mean
+            coeff_var.sort_values(ascending=False, inplace=True)
+
+            data_table = []
+            testcases = coeff_var.index.tolist()
+            data = []
+            for testcase in testcases:
+                if not threshold:
+                    data.append({'testcase': testcase,
+                                'value': coeff_var[testcase]})
+                if threshold and coeff_var[testcase] <= threshold:
+                    data.append({'testcase': testcase,
+                                'value': coeff_var[testcase]})
+
+            coefficient_variations_table = dash_table.DataTable(
+                id='table',
+                columns=[{"name": "testcase", "id": "testcase"},
+                        {"name": "value", "id": "value"}],
+                data=data,
+                page_current=0,
+                page_size=15
+            )
+
+            return coefficient_variations_table
+
+        coefficient_variations_table_1 = get_coefficient_variation_table(
+            topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
+
+        coefficient_variations_table_2 = get_coefficient_variation_table(
+            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
+
+        filtered_tests_topic_1 = _filter_tests_by_cov(
+            coefficient_variations_table_1.data,
+            cov_filtration)
+
+        filtered_tests_topic_2 = _filter_tests_by_cov(
+            coefficient_variations_table_2.data,
+            cov_filtration)
+
+        filtered_tests = filtered_tests_topic_1.intersection(filtered_tests_topic_2)
+
+        # compute coefficient of variation table with threshold
+        coefficient_variations_table_1 = get_coefficient_variation_table(
+            topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags, cov_filtration)
+
+        coefficient_variations_table_2 = get_coefficient_variation_table(
+            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags, cov_filtration)
+
+        # Bar chart, histogram
         if topic_1_computation == 'median':
             compared_jobs = analyzer.comparison_with_median(
                 topic_1,
@@ -212,7 +284,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_end_date,
                 topic_1_tags,
                 topic_2_tags,
-                topic_2_computation)
+                topic_2_computation,
+                filtered_tests)
         else:
             compared_jobs = analyzer.comparison_with_mean(
                 topic_1,
@@ -223,7 +296,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_end_date,
                 topic_1_tags,
                 topic_2_tags,
-                topic_2_computation)
+                topic_2_computation,
+                filtered_tests)
         
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
@@ -285,9 +359,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         testcases = compared_jobs.index.tolist()
         data = []
         for testcase in testcases:
-            if compared_jobs.loc[testcase, job_id] >= 15:
-                data.append({'testcase': testcase,
-                             'value': compared_jobs.loc[testcase, job_id]})
+            data.append({'testcase': testcase,
+                         'value': compared_jobs.loc[testcase, job_id]})
         comparisons_details = dash_table.DataTable(
             id='table',
             columns=[{"name": "testcase", "id": "testcase"},
@@ -306,7 +379,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_start_date,
                 topic_2_end_date,
                 topic_1_tags,
-                topic_2_tags)
+                topic_2_tags,
+                filtered_tests=filtered_tests)
         else:
             compared_jobs = analyzer.comparison_with_mean(
                 topic_1,
@@ -316,44 +390,14 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_start_date,
                 topic_2_end_date,
                 topic_1_tags,
-                topic_2_tags)
-
-        # Coefficient of Variation data table
-        def get_coefficient_variation_table(topic_name, topic_2_start_date, topic_2_end_date, topic_tags):
-            jobs = analyzer.get_jobs_dataset(topic_name, topic_2_start_date, topic_2_end_date, topic_tags)
-            jobs_mean = jobs.apply(numpy.mean,axis=1)
-            jobs_std = jobs.apply(numpy.std, axis=1)
-            coeff_var = jobs_std / jobs_mean
-            coeff_var.sort_values(ascending=False, inplace=True)
-
-            data_table = []
-            testcases = coeff_var.index.tolist()
-            data = []
-            for testcase in testcases:
-                data.append({'testcase': testcase,
-                            'value': coeff_var[testcase]})
-            coefficient_variations_table = dash_table.DataTable(
-                id='table',
-                columns=[{"name": "testcase", "id": "testcase"},
-                        {"name": "value", "id": "value"}],
-                data=data,
-                page_current=0,
-                page_size=15
-            )
-
-            return coefficient_variations_table
-
-        coefficient_variations_table_1 = get_coefficient_variation_table(
-            topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
-
-        coefficient_variations_table_2 = get_coefficient_variation_table(
-            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
+                topic_2_tags,
+                filtered_tests=filtered_tests)
 
         # graph per class
         def graph_per_class(topic, topic_start_date, topic_end_date, topic_tags):
             def getClass(testname):
                 return testname.split('/')[0]
-            jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic_tags)
+            jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic_tags, filtered_tests=filtered_tests)
             testnames = jobs.index.tolist()
             classes = list(map(getClass, testnames))
             jobs['class'] = classes

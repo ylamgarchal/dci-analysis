@@ -79,7 +79,7 @@ def filter_by_tags(jobs, topic_name, tags):
     return result_jobs
 
 
-def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False):
+def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False, filtered_tests=None):
     LOG.info('get files files from %s/%s' % (WORKING_DIR, topic_name))
     csv_files = glob.glob('%s/%s/*.csv' % (WORKING_DIR, topic_name))
     csv_files = filter_by_tags(csv_files, topic_name, tags)
@@ -97,26 +97,30 @@ def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False):
         df = pd.read_csv(abs_path_cf, delimiter=',', engine='python', index_col='testname')  # noqa
         jobs_dataset = jobs_dataset.merge(
             df, left_on='testname', right_on='testname')
+
+    if filtered_tests:
+        jobs_dataset = jobs_dataset.drop(filtered_tests)
     return jobs_dataset
 
 
 def comparison_with_mean(topic_name_1, topic_name_2, topic_1_start_date, topic_1_end_date,
-                         topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None):
+                         topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None,
+                         filtered_tests=None):
     # compare against topic_1's mean
     LOG.info('compare the mean of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
+    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags, filtered_tests=filtered_tests)
     topic_1_jobs_mean = topic_1_jobs.mean(axis=1)
 
     jobs = None
     if topic2_computation is None:
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
     elif topic2_computation == 'latest':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True, filtered_tests)
     elif topic2_computation == 'median':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
         jobs = jobs.median(axis=1).to_frame()
     elif topic2_computation == 'mean':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
         jobs = jobs.mean(axis=1).to_frame()
 
     def delta_mean(lign):
@@ -129,23 +133,24 @@ def comparison_with_mean(topic_name_1, topic_name_2, topic_1_start_date, topic_1
 
 
 def comparison_with_median(topic_name_1, topic_name_2, topic_1_start_date, topic_1_end_date,
-                           topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None):
+                           topic_2_start_date, topic_2_end_date, topic_1_tags, topic_2_tags, topic2_computation=None,
+                           filtered_tests=None):
     # compare against topic_1's median
     LOG.info('compare the median of topic %s with jobs of topic %s...' % (topic_name_1, topic_name_2))  # noqa
-    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
-    print('shape baseline jobs: %s,%s' % topic_1_jobs.shape)
+    topic_1_jobs = get_jobs_dataset(topic_name_1, topic_1_start_date, topic_1_end_date, topic_1_tags, filtered_tests=filtered_tests)
+    print('shape topic 1 jobs: %s,%s' % topic_1_jobs.shape)
     topic_1_jobs_median = topic_1_jobs.median(axis=1)
 
     jobs = None
     if topic2_computation is None:
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
     elif topic2_computation == 'latest':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, True, filtered_tests)
     elif topic2_computation == 'median':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
         jobs = jobs.median(axis=1).to_frame()
     elif topic2_computation == 'mean':
-        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False)
+        jobs = get_jobs_dataset(topic_name_2, topic_2_start_date, topic_2_end_date, topic_2_tags, False, filtered_tests)
         jobs = jobs.mean(axis=1).to_frame()
 
     print('shape topic_2 jobs: %s,%s' % jobs.shape)
