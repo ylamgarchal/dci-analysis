@@ -312,6 +312,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
             max = int(max.max())
 
         interval = int((max - min) / 25.)
+        if interval == 0:
+            interval = 1
         intervals = []
         for i in range(min, max, interval):
             intervals.append((i, i+interval))
