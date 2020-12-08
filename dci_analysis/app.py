@@ -156,6 +156,9 @@ def display_page(pathname):
                 html.Br(),
                 html.Div(id='trend'),
                 html.Br(),
+                html.H3('Trend jobs details'),
+                html.Div(id='trend_jobs_details'),
+                html.Br(),
                 html.H3('Topic 1/Sum graph per class'),
                 html.Div(id='graph_per_class_1'),
                 html.Br(),
@@ -175,7 +178,8 @@ def display_page(pathname):
               dash.dependencies.Output('coeff_var_2', 'children'),
               dash.dependencies.Output('graph_per_class_1', 'children'),
               dash.dependencies.Output('graph_per_class_2', 'children'),
-              dash.dependencies.Output('trend', 'children')],
+              dash.dependencies.Output('trend', 'children'),
+              dash.dependencies.Output('trend_jobs_details', 'children')],
               [dash.dependencies.Input('submit-button-comparison', 'n_clicks'),
                dash.dependencies.Input('topic_1_timeframe', 'start_date'),
                dash.dependencies.Input('topic_1_timeframe', 'end_date'),
@@ -199,7 +203,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 'Coefficent of variation table 2 !',
                 'Topic 1 / Sum Graph per class',
                 'Topic 2 / Sum Graph per class',
-                'Trend of the view between topics !')
+                'Trend of the view between topics !',
+                'Trends jobs details')
     else:
 
         cov_filtration = float(cov_filtration)
@@ -222,7 +227,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
 
         # Coefficient of Variation data table
         def get_coefficient_variation_table(topic_name, topic_2_start_date, topic_2_end_date, topic_tags, threshold=None):
-            jobs = analyzer.get_jobs_dataset(topic_name, topic_2_start_date, topic_2_end_date, topic_tags)
+            jobs, _ = analyzer.get_jobs_dataset(topic_name, topic_2_start_date, topic_2_end_date, topic_tags)
             jobs_mean = jobs.apply(numpy.mean,axis=1)
             jobs_std = jobs.apply(numpy.std, axis=1)
             coeff_var = jobs_std / jobs_mean
@@ -253,12 +258,12 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         coefficient_variations_table_1 = get_coefficient_variation_table(
             topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
 
-        coefficient_variations_table_2 = get_coefficient_variation_table(
-            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
-
         filtered_tests_topic_1 = _filter_tests_by_cov(
             coefficient_variations_table_1.data,
             cov_filtration)
+
+        coefficient_variations_table_2 = get_coefficient_variation_table(
+            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
 
         filtered_tests_topic_2 = _filter_tests_by_cov(
             coefficient_variations_table_2.data,
@@ -273,9 +278,9 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         coefficient_variations_table_2 = get_coefficient_variation_table(
             topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags, cov_filtration)
 
-        # Bar chart, histogram
+
         if topic_1_computation == 'median':
-            compared_jobs = analyzer.comparison_with_median(
+            compared_jobs, jobs_ids_dates = analyzer.comparison_with_median(
                 topic_1,
                 topic_2,
                 topic_1_start_date,
@@ -287,7 +292,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_computation,
                 filtered_tests)
         else:
-            compared_jobs = analyzer.comparison_with_mean(
+            compared_jobs, jobs_ids_dates = analyzer.comparison_with_mean(
                 topic_1,
                 topic_2,
                 topic_1_start_date,
@@ -298,7 +303,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_tags,
                 topic_2_computation,
                 filtered_tests)
-        
+
+        # Bar chart, histogram
         min = compared_jobs.min() - 1.0
         if isinstance(min, float):
             min = int(min)
@@ -373,7 +379,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         )
 
         if topic_1_computation == 'median':
-            compared_jobs = analyzer.comparison_with_median(
+            compared_jobs, jobs_ids_dates = analyzer.comparison_with_median(
                 topic_1,
                 topic_2,
                 topic_1_start_date,
@@ -384,7 +390,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 topic_2_tags,
                 filtered_tests=filtered_tests)
         else:
-            compared_jobs = analyzer.comparison_with_mean(
+            compared_jobs, jobs_ids_dates = analyzer.comparison_with_mean(
                 topic_1,
                 topic_2,
                 topic_1_start_date,
@@ -399,7 +405,7 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         def graph_per_class(topic, topic_start_date, topic_end_date, topic_tags):
             def getClass(testname):
                 return testname.split('/')[0]
-            jobs = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic_tags, filtered_tests=filtered_tests)
+            jobs, jobs_ids_dates = analyzer.get_jobs_dataset(topic, topic_start_date, topic_end_date, topic_tags, filtered_tests=filtered_tests)
             testnames = jobs.index.tolist()
             classes = list(map(getClass, testnames))
             jobs['class'] = classes
@@ -435,6 +441,8 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
                 job_column.append(value)
             job_column.sort()
             index_percentage = int(len(job_column) * float_evolution_percentage_value)
+            if index_percentage >= len(job_column):
+                index_percentage = len(job_column) - 1
             trend_values.append(job_column[index_percentage])
 
         trends = dcc.Graph(
@@ -459,7 +467,22 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
             }
         )
 
-        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, graph_per_class_topic_1, graph_per_class_topic_2, trends)
+        # Trend Jobs details data table
+        # show the delta of each test case in percentage
+        data = []
+        for jid in jobs_ids_dates:
+            data.append({'date': jid['date'],
+                         'id': '[%s](https://www.distributed-ci.io/jobs/%s/jobStates)' % (jid['id'], jid['id'])})
+        trends_jobs_details = dash_table.DataTable(
+            id='table',
+            columns=[{"name": "date", "id": "date"},
+                     {"name": "id", "id": "id", "presentation": "markdown"}],
+            data=data,
+            page_current=0,
+            page_size=15
+        )
+
+        return (comparisons, comparisons_details, coefficient_variations_table_1, coefficient_variations_table_2, graph_per_class_topic_1, graph_per_class_topic_2, trends, trends_jobs_details)
 
 
 def get_min_max_date_from_topic(topic_name):
