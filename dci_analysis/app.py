@@ -61,7 +61,8 @@ def display_page(pathname):
                             {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
                             {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
                             {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
-                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
+                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'},
+                            {'label': 'RHEL-8.4-milestone', 'value': 'RHEL-8.4-milestone'}
                         ],
                         value='RHEL-8.2-milestone'
                    ),
@@ -115,7 +116,8 @@ def display_page(pathname):
                             {'label': 'RHEL-8.0-milestone', 'value': 'RHEL-8.0-milestone'},
                             {'label': 'RHEL-8.1-milestone', 'value': 'RHEL-8.1-milestone'},
                             {'label': 'RHEL-8.2-milestone', 'value': 'RHEL-8.2-milestone'},
-                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'}
+                            {'label': 'RHEL-8.3-milestone', 'value': 'RHEL-8.3-milestone'},
+                            {'label': 'RHEL-8.4-milestone', 'value': 'RHEL-8.4-milestone'}
                         ],
                         value='RHEL-8.3-milestone'
                    ),
@@ -258,18 +260,10 @@ def update_output(n_clicks, topic_1_start_date, topic_1_end_date, topic_2_start_
         coefficient_variations_table_1 = get_coefficient_variation_table(
             topic_1, topic_1_start_date, topic_1_end_date, topic_1_tags)
 
-        filtered_tests_topic_1 = _filter_tests_by_cov(
+        # use topic 1 filtered tests for topic 2 filtration as well
+        filtered_tests = _filter_tests_by_cov(
             coefficient_variations_table_1.data,
             cov_filtration)
-
-        coefficient_variations_table_2 = get_coefficient_variation_table(
-            topic_2, topic_2_start_date, topic_2_end_date, topic_2_tags)
-
-        filtered_tests_topic_2 = _filter_tests_by_cov(
-            coefficient_variations_table_2.data,
-            cov_filtration)
-
-        filtered_tests = filtered_tests_topic_1.intersection(filtered_tests_topic_2)
 
         # compute coefficient of variation table with threshold
         coefficient_variations_table_1 = get_coefficient_variation_table(
