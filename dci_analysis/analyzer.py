@@ -68,13 +68,22 @@ def filter_by_tags(jobs, topic_name, tags):
     result_jobs = []
     if not tags:
         return jobs
+    not_tags = set()
+    in_tags = set()
+    for t in tags:
+        if t.startswith('!'):
+            not_tags.add(t[1:])
+        else:
+            in_tags.add(t)
     with open('%s/%s/index_tags.json' % (WORKING_DIR, topic_name), 'r') as f:
         index_tags = f.read()
         index_tags = json.loads(index_tags)
         for job in jobs:
             job = os.path.basename(job)
             if job in index_tags:
-                if set(tags).issubset(set(index_tags[job])):
+                if not_tags and not_tags.issubset(set(index_tags[job])):
+                    continue
+                if in_tags.issubset(set(index_tags[job])):
                     result_jobs.append(job)
     return result_jobs
 
@@ -89,7 +98,11 @@ def get_jobs_dataset(topic_name, start_date, end_date, tags, latest_job=False, f
         sorted_csv_files = sorted_csv_files[-1:]
 
     jobs_ids_dates = []
-    first_csf_file, csv_files = sorted_csv_files[0], sorted_csv_files[1:] if len(sorted_csv_files) > 1 else []
+    # get first file to start pandas joins with
+    first_csf_file = sorted_csv_files[0]
+    csv_files = []
+    if len(sorted_csv_files) > 1:
+        csv_fles = sorted_csv_files[1:]
     abs_path_cf = os.path.abspath('%s/%s' % (WORKING_DIR, first_csf_file))
     jobs_ids_dates.append({'date': first_csf_file.split('/')[1].split('_', 1)[0],
                            'id': first_csf_file.split('/')[1].split('_')[1]})
