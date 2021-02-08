@@ -1,0 +1,11 @@
+[Unit]
+Description=DCI-Analysis sync service
+After=network.target
+
+[Service]
+Type=simple
+User=<user>
+Group=<user>
+EnvironmentFile=/opt/dci-analysis/systemd/remoteci.env
+WorkingDirectory=/opt/dci-analysis
+ExecStart=/usr/bin/python3 /opt/dci-analysis/dci_analysis/main.py --working-dir=${WORKING_DIR} sync --product=${PRODUCT} ${TEAM} ${TEST_FILE}

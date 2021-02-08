@@ -24,6 +24,8 @@ from the jobs tests:
 
 ## Synchronization
 
+### run the synchronization
+
 First, get your remoteci credentials from the DCI dashboard.
 
 ```console
@@ -42,11 +44,32 @@ tests from the jobs that belongs to the team TEAM, in csv format.
 Synchronize all the jobs of a product from the server to your local storage.
 
 ```console
-[yassine@Bouceka dci-analysis]$ dci-analysis --workding-dir=/tmp sync --product=PRODUCT TEAM Testname
+[yassine@Bouceka dci-analysis]$ dci-analysis --working-dir=/tmp sync --product=PRODUCT TEAM Testname
 ```
 
 This command will loop over each topic of the product to pull the jobs from.
 
+### run the synchronization with a Systemd timer on RHEL/Centos
+
+Assuming the repo has been cloned at /opt/dci-analysis.
+
+Fill the systemd/remoteci.env file with the remoteci credentials and the parameters to the sync command.
+
+Update the file systemd/dci-analysis-sync.service with the correct User and Group value.
+
+Copy the files systemd/* to /etc/systemd/system/ and reload:
+
+```console
+[yassine@Bouceka dci-analysis]$ sudo cp systemd/* /etc/systemd/system
+[yassine@Bouceka dci-analysis]$ sudo systemctl daemon-reload
+```
+
+Start the service and enable the timer:
+
+```console
+[yassine@Bouceka dci-analysis]$ sudo systemctl start dci-analysis-sync.service
+[yassine@Bouceka dci-analysis]$ sudo systemctl enable dci-analysis-sync.timer
+```
 
 Finally, run the dashboard.
 
