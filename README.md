@@ -1,6 +1,6 @@
 # Distributed CI Analysis
 
-DCI analysis is a [Pandas](https://pandas.pydata.org) based tool that will retrieve the folowing information
+DDDCCCCI analysis is a [Pandas](https://pandas.pydata.org) based tool that will retrieve the folowing information
 from the jobs tests:
 
     - Compute the mean of a baseline topic and compare the result to another topic.
