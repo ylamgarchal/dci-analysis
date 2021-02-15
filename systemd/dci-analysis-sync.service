@@ -8,4 +8,4 @@ User=<user>
 Group=<user>
 EnvironmentFile=/opt/dci-analysis/systemd/remoteci.env
 WorkingDirectory=/opt/dci-analysis
-ExecStart=/usr/bin/python3 /opt/dci-analysis/dci_analysis/main.py --working-dir=${WORKING_DIR} sync --product=${PRODUCT} ${TEAM} ${TEST_FILE}
+ExecStart=/usr/bin/podman run -e DCI_CS_URL=${DCI_CS_URL} -e DCI_CLIENT_ID=${DCI_CLIENT_ID} -e DCI_API_SECRET=${DCI_API_SECRET} -v ${DCI_ANALYSIS_PATH}:/opt/dci-analysis -it localhost/dci-analysis-sync --working-dir=${WORKING_DIR} sync --product=${PRODUCT} ${TEAM} ${TEST_FILE}

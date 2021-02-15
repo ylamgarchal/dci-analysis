@@ -49,6 +49,21 @@ Synchronize all the jobs of a product from the server to your local storage.
 
 This command will loop over each topic of the product to pull the jobs from.
 
+### run the synchronization from container
+
+First, build the image:
+
+```console
+[yassine@Bouceka dci-analysis]$ podman build -t dci-analysis-sync -f Dockerfile-sync
+```
+
+Then source the remoteci's credential and run podman:
+
+```console
+[yassine@Bouceka dci-analysis]$ source ~/dci/my-remoteci.rc.sh
+[yassine@Bouceka dci-analysis]$ podman run -e DCI_CS_URL=${DCI_CS_URL} -e DCI_CLIENT_ID=${DCI_CLIENT_ID} -e DCI_API_SECRET=${DCI_API_SECRET} -v /home/yassine/dci/dci-analysis:/opt/dci-analysis -it localhost/dci-analysis-sync --working-dir=/opt/dci-analysis sync --product=PRODUCT TEAM Testname
+```
+
 ### run the synchronization with a Systemd timer on RHEL/Centos
 
 Assuming the repo has been cloned at /opt/dci-analysis.
