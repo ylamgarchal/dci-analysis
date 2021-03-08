@@ -45,12 +45,8 @@ _EXCLUDE_TOPICS = {
 
 
 def sync_topic(dci_context, team_name, topic_name, testname, working_dir):
-    if not os.path.exists("%s/%s" % (working_dir, topic_name)):
-        try:
-            LOG.info("create %s/%s/ directory" % (working_dir, topic_name))
-            os.mkdir("%s/%s" % (working_dir, topic_name))
-        except:
-            pass
+    LOG.info("create %s/%s/ directory" % (working_dir, topic_name))
+    os.makedirs("%s/%s" % (working_dir, topic_name), exist_ok=True)
 
     try:
         sync_jobs.sync(dci_context, team_name, topic_name, testname, working_dir)
