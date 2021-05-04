@@ -103,6 +103,10 @@ def display_page(pathname):
                                             "label": "RHEL-8.4-milestone",
                                             "value": "RHEL-8.4-milestone",
                                         },
+                                        {
+                                            "label": "RHEL-9-nightly",
+                                            "value": "RHEL-9-nightly",
+                                        }
                                     ],
                                     value="RHEL-8.2-milestone",
                                 ),
@@ -189,6 +193,10 @@ def display_page(pathname):
                                             "label": "RHEL-8.4-milestone",
                                             "value": "RHEL-8.4-milestone",
                                         },
+                                        {
+                                            "label": "RHEL-9-nightly",
+                                            "value": "RHEL-9-nightly",
+                                        }
                                     ],
                                     value="RHEL-8.3-milestone",
                                 ),
