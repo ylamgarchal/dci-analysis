@@ -85,7 +85,11 @@ def get_topics_of_product(dci_context, product_id):
             "product %s: status: %s, message: %s"
             % (product_id, res.status_code, res.text)
         )
-    return res.json()["product"]["topics"]
+    _results = []
+    for t in es.json()["product"]["topics"]:
+        if t['state'] == 'active':
+            _results.append(t)
+    return _results
 
 
 def get_topic_id(dci_context, topic_name):
