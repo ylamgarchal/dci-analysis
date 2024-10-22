@@ -107,16 +107,30 @@ def get_topic_id(dci_context, topic_name):
 
 
 def get_jobs(dci_context, team_id, topic_id):
-    uri = "%s/jobs?where=status:success,team_id:%s,topic_id:%s&embed=components" % (
-        dci_context.dci_cs_api,
-        team_id,
-        topic_id,
-    )
-    res = get_with_retry(dci_context, uri)
+    jobs = []
+    limit = 100
+    offset = 0
+    total_jobs = None
 
-    if res is not None and res.status_code != 200:
-        LOG.error("status: %s, message: %s" % (res.status_code, res.text))
-    return res.json()["jobs"]
+    while total_jobs is None or offset < total_jobs:
+        uri = (
+            f"{dci_context.dci_cs_api}/jobs?limit={limit}&offset={offset}&sort=-created_at"
+            f"&where=status:success,team_id:{team_id},topic_id:{topic_id}"
+        )
+        res = get_with_retry(dci_context, uri)
+
+        if res is not None and res.status_code != 200:
+            LOG.error(f"status: {res.status_code}, message: {res.text}")
+            return []
+
+        data = res.json()
+        if total_jobs is None:
+            total_jobs = data["_meta"]["count"]
+
+        jobs.extend(data["jobs"])
+        offset += limit
+
+    return jobs
 
 
 def get_files_of_job(dci_context, job_id, where=None):
